@@ -51,6 +51,7 @@ const dict = {
   adTimerReady: { ko: '보상을 받을 수 있어요!', en: 'You can claim your reward!' },
   adCloseAria: { ko: '닫기', en: 'Close' },
 
+  gameTitle: { ko: '🐾 캣 트리오', en: '🐾 Cat Trio' },
   rankTitle: { ko: '🏆 캣 트리오 랭킹', en: '🏆 Cat Trio Rankings' },
   rankStage: { ko: '스테이지 {n}', en: 'Stage {n}' },
   rankYourBest: { ko: '나의 최고 기록', en: 'Your Best Record' },

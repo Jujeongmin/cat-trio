@@ -38,7 +38,7 @@ export function showStageSelect(
 
   screen.innerHTML = `
     <header class="select-top">
-      <h1>🐾 Cat Trio</h1>
+      <h1>${t('gameTitle')}</h1>
       <div class="select-info">
         <span class="coin"><i class="coin-ic"></i> ${store.coins}</span>
         <button class="lang-toggle-btn" aria-label="Language"></button>

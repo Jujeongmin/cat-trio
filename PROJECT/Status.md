@@ -2,6 +2,7 @@
 
 ## Implemented
 
+- **Localized Game Title**: Added `gameTitle` translation key to localizations dictionary. The main title of the game now dynamically toggles between "🐾 Cat Trio" (English) and "🐾 캣 트리오" (Korean) seamlessly when language buttons are pressed.
 - **Structured TypeScript Game Server**: Created a secure server codebase under `server/src/server.ts` managing real-time database collections for ranking records.
 - **Robust Integration Testing**: Wrote a complete test suite in `server/test/server.test.ts` verifying all game server functions under isolated conditions. All tests pass (3/3).
 - **Background Auto-Sync**: Client automatically uploads progress when clearing a stage and synchronizes offline progress immediately when launching the Leaderboard.
@@ -14,4 +15,4 @@
 
 ## Build Status
 
-- **Build Output**: Successfully compiled with zero errors (built in 753ms). Ready for production deployment!
+- **Build Output**: Successfully compiled with zero errors (built in 883ms). Ready for production deployment!

@@ -19,7 +19,9 @@ function startStage(id: number) {
   current?.destroy();
   store.currentStage = id;
   persist();
-  current = new Game(app, makeStage(id), handleEnd, toSelect);
+  // 스테이지 1 첫 플레이에서만 튜토리얼
+  const tutorial = id === 1 && !store.tutorialDone;
+  current = new Game(app, makeStage(id), handleEnd, toSelect, tutorial);
   if (import.meta.env.DEV) (window as unknown as { __game: Game }).__game = current;
 }
 

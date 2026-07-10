@@ -73,11 +73,18 @@ export class Game {
   }[] = [];
   private spawnSeq = 0;
 
+  // 튜토리얼 (스테이지 1 첫 플레이)
+  private tutStep = 0; // 0=꺼짐, 1=고양이 선택 안내, 2=3매치 안내
+  private tutEls: HTMLElement[] = [];
+  private tutHandEl: HTMLElement | null = null;
+  private tutMsgEl: HTMLElement | null = null;
+
   constructor(
     private root: HTMLElement,
     private stage: StageData,
     private onEnd: (result: GameResult) => void,
     private onBack: () => void,
+    private tutorial = false,
   ) {
     this.cats = stage.cats.map((c) => ({ ...c, present: true }));
     for (const c of this.cats) this.occupied.add(cellKey(c.col, c.row));
@@ -96,6 +103,14 @@ export class Game {
     this.computeEscapable();
     this.fitScale();
     window.addEventListener('resize', this.fitScale);
+    if (this.tutorial) {
+      this.startTutorial(); // 타이머는 튜토리얼이 끝난 뒤 시작
+    } else {
+      this.startTimer();
+    }
+  }
+
+  private startTimer() {
     this.startTime = performance.now();
     this.timerId = window.setInterval(this.tick, 100);
   }
@@ -389,6 +404,77 @@ export class Game {
       el.classList.toggle('free', esc);
       el.classList.toggle('locked', !esc);
     }
+    if (this.tutStep > 0) this.updateTutorialHand();
+  }
+
+  // ---- 튜토리얼 -----------------------------------------------------------
+  private startTutorial() {
+    this.wrap.classList.add('tut-on');
+    (this.barEl.firstElementChild as HTMLElement).style.width = '100%'; // 시간바 꽉 찬 채 고정
+
+    const dim = document.createElement('div');
+    dim.className = 'tut-dim';
+
+    const hand = document.createElement('div');
+    hand.className = 'tut-hand';
+    hand.textContent = '👆';
+    this.tutHandEl = hand;
+
+    const msg = document.createElement('div');
+    msg.className = 'tut-msg';
+    msg.innerHTML = `<p class="tut-text"></p><button class="tut-skip">건너뛰기</button>`;
+    msg.querySelector('.tut-skip')!.addEventListener('click', () => this.finishTutorial());
+    this.tutMsgEl = msg.querySelector('.tut-text');
+
+    this.wrap.append(dim, hand, msg);
+    this.tutEls = [dim, hand, msg];
+
+    this.showTutorialStep(1);
+  }
+
+  private showTutorialStep(step: number) {
+    this.tutStep = step;
+    if (this.tutMsgEl) {
+      this.tutMsgEl.textContent =
+        step === 1
+          ? '반짝이는 고양이를 눌러 탈출구(▼)로 내보내세요'
+          : '같은 고양이 3마리를 슬롯에 모으면 사라져요!';
+    }
+    this.updateTutorialHand();
+  }
+
+  // 손가락을 현재 선택 가능한 고양이 위에 놓는다 (1단계에서만)
+  private updateTutorialHand() {
+    const hand = this.tutHandEl;
+    if (!hand) return;
+    if (this.tutStep !== 1) {
+      hand.style.display = 'none';
+      return;
+    }
+    const free = this.cats.find(
+      (c) => c.present && this.els.get(c.id)?.classList.contains('free'),
+    );
+    if (!free) {
+      hand.style.display = 'none';
+      return;
+    }
+    hand.style.display = 'block';
+    hand.style.left = `${gridX(free.col, this.stage.cols) - 14}px`;
+    hand.style.top = `${gridY(free.row) + CELL * 0.42}px`;
+  }
+
+  private finishTutorial() {
+    if (!this.tutorial) return;
+    this.tutorial = false;
+    this.tutStep = 0;
+    store.tutorialDone = true;
+    persist();
+    this.wrap.classList.remove('tut-on');
+    for (const el of this.tutEls) el.remove();
+    this.tutEls = [];
+    this.tutHandEl = null;
+    this.tutMsgEl = null;
+    this.startTimer(); // 이제부터 시간 흐름
   }
 
   private nearestExit(cat: BoardCat) {
@@ -419,6 +505,7 @@ export class Game {
   };
 
   private async select(cat: BoardCat) {
+    if (this.tutStep === 1) this.showTutorialStep(2); // 첫 선택 → 3매치 안내
     this.inFlight++;
     this.updateItemBar();
     try {
@@ -498,6 +585,7 @@ export class Game {
     }
     if (!match) return false;
     haptics.match();
+    if (this.tutorial) this.finishTutorial(); // 첫 3매치 성사 → 튜토리얼 완료
 
     const removing = match;
     this.slots = this.slots.filter((s) => !removing.includes(s.id));

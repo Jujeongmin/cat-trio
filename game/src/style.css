@@ -713,3 +713,70 @@ body {
   padding: 12px;
   cursor: pointer;
 }
+
+/* ===== 튜토리얼 ===== */
+.tut-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 900;
+  pointer-events: none;
+}
+/* 튜토리얼 중에는 선택 가능한 고양이만 어둠 위로 띄워 강조 */
+.wrap.tut-on .cat.free {
+  z-index: 950;
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 4px #ffcf5a,
+    0 0 18px 7px rgba(255, 190, 70, 0.85);
+}
+.tut-hand {
+  position: absolute;
+  z-index: 1000;
+  font-size: 40px;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+  transition:
+    left 0.3s ease,
+    top 0.3s ease;
+  animation: tutHand 1s ease-in-out infinite;
+}
+@keyframes tutHand {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+.tut-msg {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 92px;
+  z-index: 1000;
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 14px 16px 12px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.tut-text {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.tut-skip {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 10px;
+  padding: 7px 16px;
+  cursor: pointer;
+}

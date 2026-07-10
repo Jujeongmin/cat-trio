@@ -21,13 +21,62 @@ body {
   background: radial-gradient(circle at 50% 0%, var(--bg2), var(--bg));
   color: var(--ink);
   user-select: none;
-  touch-action: manipulation;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none; /* iOS 길게 누르기 콜아웃(저장/공유 메뉴) 방지 */
+  touch-action: manipulation; /* 더블탭 확대·탭 지연 제거 */
+  overscroll-behavior: none; /* 당겨서 새로고침·바운스 스크롤 방지 */
+}
+
+/* 모바일 브라우저 주소창 표시/숨김에 따른 100vh 흔들림 보정 */
+@supports (height: 100dvh) {
+  html,
+  body {
+    height: 100dvh;
+  }
 }
 
 #app {
   position: fixed;
   inset: 0;
   overflow: hidden;
+}
+
+/* 세로 전용 게임 — 터치 기기가 가로로 눕혀지면 회전 안내를 덮어씌운다.
+   hover:none + pointer:coarse 로 데스크톱 창 가로/세로는 걸리지 않게 한다. */
+.rotate-prompt {
+  display: none;
+}
+@media (orientation: landscape) and (hover: none) and (pointer: coarse) {
+  .rotate-prompt {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: var(--bg);
+    color: var(--ink);
+    text-align: center;
+    padding: 24px;
+  }
+  .rotate-prompt .icon {
+    font-size: 56px;
+    animation: rotateHint 1.6s ease-in-out infinite;
+  }
+  #app {
+    visibility: hidden;
+  }
+}
+@keyframes rotateHint {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-90deg);
+  }
 }
 
 /* 가상 캔버스 — CSS scale 로 화면에 맞춤 */

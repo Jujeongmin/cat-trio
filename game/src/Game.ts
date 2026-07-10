@@ -2,6 +2,7 @@ import { CatPlacement, StageData, GameResult } from './types';
 import { catSprite } from './assets';
 import { cellKey, reachableEmpty, isEscapable } from './escape';
 import { store, persist } from './storage';
+import { haptics } from './haptics';
 import {
   VW,
   VH,
@@ -413,6 +414,7 @@ export class Game {
     if (!cat || !cat.present) return;
     if (target.classList.contains('locked')) return; // 탈출 불가
     if (this.slots.length >= this.capacity) return;
+    haptics.tap();
     void this.select(cat);
   };
 
@@ -495,6 +497,7 @@ export class Game {
       }
     }
     if (!match) return false;
+    haptics.match();
 
     const removing = match;
     this.slots = this.slots.filter((s) => !removing.includes(s.id));
@@ -623,6 +626,7 @@ export class Game {
     this.over = true;
     this.updateItemBar();
     clearInterval(this.timerId);
+    win ? haptics.win() : haptics.lose();
     const timeMs = performance.now() - this.startTime;
     const stars = win ? this.stars : 0;
     const coins = win

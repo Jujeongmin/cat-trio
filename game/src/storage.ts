@@ -24,7 +24,7 @@ const DEFAULT: SaveData = {
   currentStage: 1,
   coins: 0,
   bestStars: {},
-  settings: { bgm: true, sfx: true, vibrate: true, lang: 'ko' },
+  settings: { bgm: true, sfx: true, vibrate: true, lang: 'en' }, // 기본 언어: 영어
   tutorialDone: false,
 };
 

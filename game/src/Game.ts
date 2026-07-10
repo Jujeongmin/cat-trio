@@ -4,6 +4,7 @@ import { cellKey, reachableEmpty, isEscapable } from './escape';
 import { store, persist } from './storage';
 import { haptics } from './haptics';
 import { sfx } from './audio';
+import { t } from './i18n';
 import {
   VW,
   VH,
@@ -157,15 +158,15 @@ export class Game {
     this.itemsEl.className = 'itembar';
     this.itemsEl.innerHTML = `
       <button class="item-btn" data-item="shuffle">
-        <span class="item-ic">🔀</span><span class="item-label">셔플</span>
+        <span class="item-ic">🔀</span><span class="item-label">${t('shuffleLabel')}</span>
         <span class="item-cost"><i class="coin-ic"></i>${ITEM_COST.shuffle}</span>
       </button>
       <button class="item-btn" data-item="undo">
-        <span class="item-ic">↩️</span><span class="item-label">되돌리기</span>
+        <span class="item-ic">↩️</span><span class="item-label">${t('undoLabel')}</span>
         <span class="item-cost"><i class="coin-ic"></i>${ITEM_COST.undo}</span>
       </button>
       <button class="item-btn" data-item="slotplus">
-        <span class="item-ic">➕</span><span class="item-label">슬롯+1</span>
+        <span class="item-ic">➕</span><span class="item-label">${t('slotPlusLabel')}</span>
         <span class="item-cost"><i class="coin-ic"></i>${ITEM_COST.slotPlus}</span>
       </button>
     `;
@@ -191,7 +192,7 @@ export class Game {
 
   private renderHud() {
     this.hudEl.innerHTML = `
-      <button class="back-btn" aria-label="뒤로">‹</button>
+      <button class="back-btn" aria-label="${t('backAria')}">‹</button>
       <div class="hud-item">STAGE <b>${this.stage.id}</b></div>
       <div class="hud-item"><i class="coin-ic"></i> <b>${store.coins}</b></div>
     `;
@@ -427,7 +428,7 @@ export class Game {
 
     const msg = document.createElement('div');
     msg.className = 'tut-msg';
-    msg.innerHTML = `<p class="tut-text"></p><button class="tut-skip">건너뛰기</button>`;
+    msg.innerHTML = `<p class="tut-text"></p><button class="tut-skip">${t('skipBtn')}</button>`;
     msg.querySelector('.tut-skip')!.addEventListener('click', () => this.finishTutorial());
     this.tutMsgEl = msg.querySelector('.tut-text');
 
@@ -440,10 +441,7 @@ export class Game {
   private showTutorialStep(step: number) {
     this.tutStep = step;
     if (this.tutMsgEl) {
-      this.tutMsgEl.textContent =
-        step === 1
-          ? '반짝이는 고양이를 눌러 탈출구(▼)로 내보내세요'
-          : '같은 고양이 3마리를 슬롯에 모으면 사라져요!';
+      this.tutMsgEl.textContent = step === 1 ? t('tutorialStep1') : t('tutorialStep2');
     }
     this.updateTutorialHand();
   }

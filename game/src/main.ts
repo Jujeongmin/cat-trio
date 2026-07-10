@@ -5,6 +5,7 @@ import { store, persist, resetSave, recordClear } from './storage';
 import { showStageSelect, showResult, showSettings } from './screens';
 import { GameResult } from './types';
 import { unlockAudio } from './audio';
+import { applyDocumentLang } from './i18n';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 
@@ -42,11 +43,16 @@ function handleEnd(result: GameResult) {
 }
 
 function openSettings() {
-  showSettings(app, () => {
-    resetSave();
-    toSelect();
-  });
+  showSettings(
+    app,
+    () => {
+      resetSave();
+      toSelect();
+    },
+    toSelect, // 닫을 때 스테이지 선택 화면을 새로 그려 언어 변경 등을 반영
+  );
 }
 
+applyDocumentLang();
 // 진입: 스테이지 선택 화면
 toSelect();

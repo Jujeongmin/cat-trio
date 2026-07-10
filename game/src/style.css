@@ -575,6 +575,23 @@ body {
   justify-content: center;
   cursor: pointer;
 }
+
+/* 메인 화면 빠른 언어 전환 버튼 (EN/KO) */
+.lang-toggle-btn {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 10px;
+  font: 800 14px/1 system-ui;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.6);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.lang-toggle-btn:active {
+  transform: scale(0.95);
+}
 /* 스테이지 카드 페이저 — 한 번에 하나씩 좌우로 넘기는 방식 */
 .stage-pager {
   flex: 1;

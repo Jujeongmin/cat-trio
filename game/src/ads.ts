@@ -1,3 +1,5 @@
+import { t, tf } from './i18n';
+
 // 보상형 광고 SDK 어댑터 (명세 10).
 //
 // 실제 Verse8/Agent8 광고 SDK가 연동되면 loadAd()/showAd() 내부 구현만
@@ -29,12 +31,12 @@ function showAd(container: HTMLElement): Promise<AdResult> {
         <span class="ad-badge">AD</span>
         <div class="ad-stage">
           <div class="ad-spinner"></div>
-          <p class="ad-caption">보상형 광고 재생 중…</p>
+          <p class="ad-caption">${t('adCaption')}</p>
         </div>
         <div class="ad-progress"><i></i></div>
         <div class="ad-foot">
-          <span class="ad-timer">${AD_DURATION}초 후 닫기 가능</span>
-          <button class="ad-close" disabled aria-label="닫기">✕</button>
+          <span class="ad-timer">${tf('adTimerWait', { n: AD_DURATION })}</span>
+          <button class="ad-close" disabled aria-label="${t('adCloseAria')}">✕</button>
         </div>
       </div>
     `;
@@ -52,11 +54,11 @@ function showAd(container: HTMLElement): Promise<AdResult> {
       bar.style.width = `${ratio * 100}%`;
       if (ratio >= 1) {
         clearInterval(tick);
-        timerText.textContent = '보상을 받을 수 있어요!';
+        timerText.textContent = t('adTimerReady');
         closeBtn.disabled = false;
         closeBtn.classList.add('ready');
       } else {
-        timerText.textContent = `${Math.ceil(AD_DURATION - elapsed)}초 후 닫기 가능`;
+        timerText.textContent = tf('adTimerWait', { n: Math.ceil(AD_DURATION - elapsed) });
       }
     }, tickMs);
 

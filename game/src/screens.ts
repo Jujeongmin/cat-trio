@@ -2,6 +2,7 @@ import { store, persist } from './storage';
 import { GameResult } from './types';
 import { bgm } from './audio';
 import { playRewardedAd } from './ads';
+import { t, tf, applyDocumentLang } from './i18n';
 
 const FREE_AD_COINS = 30; // 스테이지 선택 화면의 "광고 보고 코인 받기" 보상
 
@@ -39,24 +40,24 @@ export function showStageSelect(
       <h1>🐾 Cat Trio</h1>
       <div class="select-info">
         <span class="coin"><i class="coin-ic"></i> ${store.coins}</span>
-        <button class="icon-btn settings-btn" aria-label="설정">⚙️</button>
+        <button class="lang-toggle-btn" aria-label="Language"></button>
+        <button class="icon-btn settings-btn" aria-label="${t('settingsAria')}">⚙️</button>
       </div>
     </header>
-    <button class="ad-free-btn">
-      <span class="ad-free-ic">🎬</span>
-      광고 보고 <i class="coin-ic"></i> ${FREE_AD_COINS} 받기
-    </button>
+    <button class="ad-free-btn"></button>
     <div class="stage-pager">
-      <button class="pager-arrow pager-prev" aria-label="이전 스테이지">‹</button>
+      <button class="pager-arrow pager-prev" aria-label="${t('prevStageAria')}">‹</button>
       <div class="pager-viewport">
         <div class="stage-card"></div>
       </div>
-      <button class="pager-arrow pager-next" aria-label="다음 스테이지">›</button>
+      <button class="pager-arrow pager-next" aria-label="${t('nextStageAria')}">›</button>
     </div>
   `;
 
   const coinLabel = screen.querySelector('.coin')!;
   const adBtn = screen.querySelector<HTMLButtonElement>('.ad-free-btn')!;
+  const langBtn = screen.querySelector<HTMLButtonElement>('.lang-toggle-btn')!;
+  const settingsBtn = screen.querySelector<HTMLButtonElement>('.settings-btn')!;
   const card = screen.querySelector<HTMLDivElement>('.stage-card')!;
   const prevBtn = screen.querySelector<HTMLButtonElement>('.pager-prev')!;
   const nextBtn = screen.querySelector<HTMLButtonElement>('.pager-next')!;
@@ -68,13 +69,13 @@ export function showStageSelect(
       return `
         <span class="stage-card-lock">🔒</span>
         <span class="stage-card-no locked">${id}</span>
-        <span class="stage-card-sub">잠김</span>
-        <button class="stage-play-btn" disabled>플레이</button>`;
+        <span class="stage-card-sub">${t('lockedLabel')}</span>
+        <button class="stage-play-btn" disabled>${t('playBtn')}</button>`;
     }
     return `
       <span class="stage-card-no">${id}</span>
       <span class="stage-card-stars">${starRow(stars)}</span>
-      <button class="stage-play-btn primary" data-stage="${id}">플레이</button>`;
+      <button class="stage-play-btn primary" data-stage="${id}">${t('playBtn')}</button>`;
   }
 
   function render(dir: 0 | 1 | -1) {
@@ -100,7 +101,20 @@ export function showStageSelect(
     render(delta);
   }
 
-  render(0);
+  // 언어 전환 시 화면에 보이는 모든 텍스트를 즉시 다시 그린다
+  function applyLang() {
+    langBtn.textContent = store.settings.lang === 'ko' ? 'EN' : 'KO';
+    settingsBtn.setAttribute('aria-label', t('settingsAria'));
+    prevBtn.setAttribute('aria-label', t('prevStageAria'));
+    nextBtn.setAttribute('aria-label', t('nextStageAria'));
+    adBtn.innerHTML = `<span class="ad-free-ic">🎬</span> ${tf('freeAdBtn', {
+      icon: '<i class="coin-ic"></i>',
+      n: FREE_AD_COINS,
+    })}`;
+    render(0);
+  }
+
+  applyLang();
 
   // 좌우 스와이프로도 넘길 수 있게
   let dragStartX: number | null = null;
@@ -118,12 +132,19 @@ export function showStageSelect(
   });
 
   screen.addEventListener('click', (e) => {
-    const t = e.target as HTMLElement;
-    if (t.closest('.settings-btn')) {
+    const tgt = e.target as HTMLElement;
+    if (tgt.closest('.settings-btn')) {
       onSettings();
       return;
     }
-    if (t.closest('.ad-free-btn')) {
+    if (tgt.closest('.lang-toggle-btn')) {
+      store.settings.lang = store.settings.lang === 'ko' ? 'en' : 'ko';
+      persist();
+      applyDocumentLang();
+      applyLang();
+      return;
+    }
+    if (tgt.closest('.ad-free-btn')) {
       if (adBtn.disabled) return;
       adBtn.disabled = true;
       void playRewardedAd(root).then((res) => {
@@ -135,15 +156,15 @@ export function showStageSelect(
       });
       return;
     }
-    if (t.closest('.pager-prev')) {
+    if (tgt.closest('.pager-prev')) {
       go(-1);
       return;
     }
-    if (t.closest('.pager-next')) {
+    if (tgt.closest('.pager-next')) {
       go(1);
       return;
     }
-    const playBtn = t.closest('.stage-play-btn') as HTMLButtonElement | null;
+    const playBtn = tgt.closest('.stage-play-btn') as HTMLButtonElement | null;
     if (playBtn && !playBtn.disabled) onPlay(Number(playBtn.dataset.stage));
   });
 
@@ -176,39 +197,39 @@ export function showResult(
 
   overlay.innerHTML = `
     <div class="panel">
-      <h2>${result.win ? '클리어!' : '게임 오버'}</h2>
+      <h2>${result.win ? t('clearTitle') : t('gameOverTitle')}</h2>
       ${
         result.win
           ? `<div class="earned-stars">${earnedStars}</div>
-             ${isNewBest ? '<div class="new-best">최고 기록 갱신! ✨</div>' : ''}
+             ${isNewBest ? `<div class="new-best">${t('newBest')}</div>` : ''}
              <div class="result-rows">
-               <div><span>⏱ 시간</span><b>${sec}s</b></div>
-               <div><span><i class="coin-ic"></i> 코인</span><b class="coin-earned">+${result.coins}</b></div>
+               <div><span>${t('timeLabel')}</span><b>${sec}s</b></div>
+               <div><span><i class="coin-ic"></i> ${t('coinLabel')}</span><b class="coin-earned">+${result.coins}</b></div>
              </div>
              ${
                result.coins > 0
                  ? `<button class="ad-double-btn">
-                      <span class="ad-free-ic">🎬</span> 광고 보고 코인 2배 받기
+                      <span class="ad-free-ic">🎬</span> ${t('adDoubleBtn')}
                     </button>`
                  : ''
              }`
-          : `<p>슬롯이 가득 찼거나 시간이 다 됐어요</p>`
+          : `<p>${t('gameOverMsg')}</p>`
       }
       <div class="btns">
-        <button data-act="select">스테이지 선택</button>
+        <button data-act="select">${t('stageSelectBtn')}</button>
         ${
           result.win
-            ? `<button class="primary" data-act="next">다음 ▶</button>`
-            : `<button class="primary" data-act="retry">다시하기</button>`
+            ? `<button class="primary" data-act="next">${t('nextBtn')}</button>`
+            : `<button class="primary" data-act="retry">${t('retryBtn')}</button>`
         }
       </div>
     </div>
   `;
 
   overlay.addEventListener('click', (e) => {
-    const t = e.target as HTMLElement;
+    const tgt = e.target as HTMLElement;
 
-    const adBtn = t.closest('.ad-double-btn') as HTMLButtonElement | null;
+    const adBtn = tgt.closest('.ad-double-btn') as HTMLButtonElement | null;
     if (adBtn) {
       if (adBtn.disabled) return;
       adBtn.disabled = true;
@@ -221,13 +242,13 @@ export function showResult(
         persist();
         const coinEl = overlay.querySelector('.coin-earned')!;
         coinEl.textContent = `+${result.coins * 2}`;
-        adBtn.textContent = '✓ 코인 2배 받음';
+        adBtn.textContent = t('adDoubleClaimed');
         adBtn.classList.add('claimed');
       });
       return;
     }
 
-    const act = t.dataset.act;
+    const act = tgt.dataset.act;
     if (!act) return;
     overlay.remove();
     if (act === 'next') actions.onNext();
@@ -239,7 +260,7 @@ export function showResult(
 }
 
 /** 설정 모달 (명세 13) */
-export function showSettings(root: HTMLElement, onReset: () => void): void {
+export function showSettings(root: HTMLElement, onReset: () => void, onClose: () => void): void {
   const s = store.settings;
   const overlay = document.createElement('div');
   overlay.className = 'overlay';
@@ -254,44 +275,49 @@ export function showSettings(root: HTMLElement, onReset: () => void): void {
 
   overlay.innerHTML = `
     <div class="panel settings-panel">
-      <h2>설정</h2>
-      ${toggle('bgm', '🎵 배경음악')}
-      ${toggle('sfx', '🔊 효과음')}
-      ${toggle('vibrate', '📳 진동')}
+      <h2>${t('settingsTitle')}</h2>
+      ${toggle('bgm', t('bgmLabel'))}
+      ${toggle('sfx', t('sfxLabel'))}
+      ${toggle('vibrate', t('vibrateLabel'))}
       <div class="set-row">
-        <span>🌐 언어</span>
-        <button class="lang-btn" data-lang>${s.lang === 'ko' ? '한국어' : 'English'}</button>
+        <span>${t('languageLabel')}</span>
+        <button class="lang-btn" data-lang>${s.lang === 'ko' ? t('langKorean') : t('langEnglish')}</button>
       </div>
-      <button class="danger" data-reset>데이터 초기화</button>
-      <div class="btns"><button class="primary" data-close>닫기</button></div>
+      <button class="danger" data-reset>${t('resetBtn')}</button>
+      <div class="btns"><button class="primary" data-close>${t('closeBtn')}</button></div>
     </div>
   `;
 
   overlay.addEventListener('click', (e) => {
-    const t = e.target as HTMLElement;
-    const tg = t.closest('[data-toggle]') as HTMLElement | null;
-    if (tg) {
-      const key = tg.dataset.toggle as 'bgm' | 'sfx' | 'vibrate';
+    const tgt = e.target as HTMLElement;
+    const toggleBtn = tgt.closest('[data-toggle]') as HTMLElement | null;
+    if (toggleBtn) {
+      const key = toggleBtn.dataset.toggle as 'bgm' | 'sfx' | 'vibrate';
       store.settings[key] = !store.settings[key];
-      tg.classList.toggle('on', store.settings[key]);
+      toggleBtn.classList.toggle('on', store.settings[key]);
       persist();
       if (key === 'bgm') (store.settings.bgm ? bgm.start() : bgm.stop());
       return;
     }
-    if (t.closest('[data-lang]')) {
+    if (tgt.closest('[data-lang]')) {
       store.settings.lang = store.settings.lang === 'ko' ? 'en' : 'ko';
-      (t as HTMLElement).textContent = store.settings.lang === 'ko' ? '한국어' : 'English';
       persist();
+      applyDocumentLang();
+      overlay.remove();
+      showSettings(root, onReset, onClose); // 모달 전체를 새 언어로 다시 그림
       return;
     }
-    if (t.closest('[data-reset]')) {
-      if (confirm('모든 진행 상황을 초기화할까요?')) {
+    if (tgt.closest('[data-reset]')) {
+      if (confirm(t('resetConfirm'))) {
         onReset();
         overlay.remove();
       }
       return;
     }
-    if (t.closest('[data-close]')) overlay.remove();
+    if (tgt.closest('[data-close]')) {
+      overlay.remove();
+      onClose();
+    }
   });
 
   root.appendChild(overlay);

@@ -6,6 +6,10 @@
 // 재생 UI → 끝까지 보면 rewarded, 로드 실패 시 failed.
 export type AdResult = 'rewarded' | 'skipped' | 'failed';
 
+// 프로토타입 단계 — 실제 광고 없이 즉시 보상을 준다. 나중에 광고 SDK를
+// 붙일 때 이 값을 false 로 바꾸면 아래 로드→재생 카운트다운 흐름이 그대로 살아난다.
+const PROTOTYPE_INSTANT = true;
+
 const AD_DURATION = 4; // 초 — 스킵 가능해지기까지
 
 // 실제 SDK 예: await sdk.ads.load('rewarded')
@@ -67,6 +71,7 @@ function showAd(container: HTMLElement): Promise<AdResult> {
 
 /** 보상형 광고 재생 전체 흐름. container 에 전체화면 오버레이로 렌더된다. */
 export async function playRewardedAd(container: HTMLElement): Promise<AdResult> {
+  if (PROTOTYPE_INSTANT) return 'rewarded';
   const loaded = await loadAd();
   if (!loaded) return 'failed';
   return showAd(container);

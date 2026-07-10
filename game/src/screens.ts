@@ -17,7 +17,7 @@ function starRow(n: number): string {
     .join('');
 }
 
-/** 스테이지 선택 화면 (명세 5-2) */
+/** 스테이지 선택 화면 (명세 5-2) — 한 번에 한 스테이지씩 넘기는 카드 방식 */
 export function showStageSelect(
   root: HTMLElement,
   onPlay: (stageId: number) => void,
@@ -31,16 +31,8 @@ export function showStageSelect(
     ? Math.max(store.highStage, DEV_UNLOCK_ALL)
     : store.highStage;
   const maxTile = effectiveHigh + LOOKAHEAD;
-  let tiles = '';
-  for (let id = 1; id <= maxTile; id++) {
-    const locked = id > effectiveHigh;
-    const stars = store.bestStars[id] ?? 0;
-    tiles += `
-      <button class="tile ${locked ? 'locked' : ''}" data-stage="${id}" ${locked ? 'disabled' : ''}>
-        <span class="tile-no">${locked ? '🔒' : id}</span>
-        <span class="tile-stars">${locked ? '' : starRow(stars)}</span>
-      </button>`;
-  }
+  const clampStage = (n: number) => Math.max(1, Math.min(maxTile, n));
+  let cur = clampStage(store.currentStage || 1);
 
   screen.innerHTML = `
     <header class="select-top">
@@ -54,11 +46,76 @@ export function showStageSelect(
       <span class="ad-free-ic">🎬</span>
       광고 보고 <i class="coin-ic"></i> ${FREE_AD_COINS} 받기
     </button>
-    <div class="tiles">${tiles}</div>
+    <div class="stage-pager">
+      <button class="pager-arrow pager-prev" aria-label="이전 스테이지">‹</button>
+      <div class="pager-viewport">
+        <div class="stage-card"></div>
+      </div>
+      <button class="pager-arrow pager-next" aria-label="다음 스테이지">›</button>
+    </div>
   `;
 
   const coinLabel = screen.querySelector('.coin')!;
   const adBtn = screen.querySelector<HTMLButtonElement>('.ad-free-btn')!;
+  const card = screen.querySelector<HTMLDivElement>('.stage-card')!;
+  const prevBtn = screen.querySelector<HTMLButtonElement>('.pager-prev')!;
+  const nextBtn = screen.querySelector<HTMLButtonElement>('.pager-next')!;
+
+  function cardHTML(id: number): string {
+    const locked = id > effectiveHigh;
+    const stars = store.bestStars[id] ?? 0;
+    if (locked) {
+      return `
+        <span class="stage-card-lock">🔒</span>
+        <span class="stage-card-no locked">${id}</span>
+        <span class="stage-card-sub">잠김</span>
+        <button class="stage-play-btn" disabled>플레이</button>`;
+    }
+    return `
+      <span class="stage-card-no">${id}</span>
+      <span class="stage-card-stars">${starRow(stars)}</span>
+      <button class="stage-play-btn primary" data-stage="${id}">플레이</button>`;
+  }
+
+  function render(dir: 0 | 1 | -1) {
+    if (dir !== 0) {
+      const outCls = dir === 1 ? 'slide-out-l' : 'slide-out-r';
+      card.classList.add(outCls);
+      window.setTimeout(() => {
+        card.className = 'stage-card ' + (dir === 1 ? 'slide-in-r' : 'slide-in-l');
+        card.innerHTML = cardHTML(cur);
+        requestAnimationFrame(() => card.classList.remove('slide-in-r', 'slide-in-l'));
+      }, 160);
+    } else {
+      card.innerHTML = cardHTML(cur);
+    }
+    prevBtn.disabled = cur <= 1;
+    nextBtn.disabled = cur >= maxTile;
+  }
+
+  function go(delta: 1 | -1) {
+    const next = clampStage(cur + delta);
+    if (next === cur) return;
+    cur = next;
+    render(delta);
+  }
+
+  render(0);
+
+  // 좌우 스와이프로도 넘길 수 있게
+  let dragStartX: number | null = null;
+  const viewport = screen.querySelector<HTMLDivElement>('.pager-viewport')!;
+  viewport.addEventListener('pointerdown', (e) => {
+    dragStartX = e.clientX;
+  });
+  viewport.addEventListener('pointerup', (e) => {
+    if (dragStartX === null) return;
+    const dx = e.clientX - dragStartX;
+    dragStartX = null;
+    const THRESHOLD = 40;
+    if (dx <= -THRESHOLD) go(1);
+    else if (dx >= THRESHOLD) go(-1);
+  });
 
   screen.addEventListener('click', (e) => {
     const t = e.target as HTMLElement;
@@ -78,8 +135,16 @@ export function showStageSelect(
       });
       return;
     }
-    const tile = t.closest('.tile') as HTMLButtonElement | null;
-    if (tile && !tile.disabled) onPlay(Number(tile.dataset.stage));
+    if (t.closest('.pager-prev')) {
+      go(-1);
+      return;
+    }
+    if (t.closest('.pager-next')) {
+      go(1);
+      return;
+    }
+    const playBtn = t.closest('.stage-play-btn') as HTMLButtonElement | null;
+    if (playBtn && !playBtn.disabled) onPlay(Number(playBtn.dataset.stage));
   });
 
   root.appendChild(screen);

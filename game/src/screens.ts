@@ -3,6 +3,7 @@ import { GameResult } from './types';
 import { bgm } from './audio';
 import { playRewardedAd } from './ads';
 import { t, tf, applyDocumentLang } from './i18n';
+import { connectGameServer } from './server';
 
 const FREE_AD_COINS = 30; // 스테이지 선택 화면의 "광고 보고 코인 받기" 보상
 
@@ -41,6 +42,7 @@ export function showStageSelect(
       <div class="select-info">
         <span class="coin"><i class="coin-ic"></i> ${store.coins}</span>
         <button class="lang-toggle-btn" aria-label="Language"></button>
+        <button class="icon-btn rank-btn" style="font-size: 18px;" aria-label="Leaderboard">🏆</button>
         <button class="icon-btn settings-btn" aria-label="${t('settingsAria')}">⚙️</button>
       </div>
     </header>
@@ -135,6 +137,12 @@ export function showStageSelect(
     const tgt = e.target as HTMLElement;
     if (tgt.closest('.settings-btn')) {
       onSettings();
+      return;
+    }
+    if (tgt.closest('.rank-btn')) {
+      showRanking(root, () => {
+        showStageSelect(root, onPlay, onSettings);
+      });
       return;
     }
     if (tgt.closest('.lang-toggle-btn')) {
@@ -321,4 +329,179 @@ export function showSettings(root: HTMLElement, onReset: () => void, onClose: ()
   });
 
   root.appendChild(overlay);
+}
+
+/** 랭킹 모달 */
+export function showRanking(root: HTMLElement, onClose: () => void): void {
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+
+  // 로딩 화면 먼저 그리기
+  overlay.innerHTML = `
+    <div class="panel settings-panel">
+      <h2>${t('rankTitle')}</h2>
+      <div style="padding: 30px 0; text-align: center; font-weight: bold;">
+        <span class="ad-spinner" style="display: inline-block; margin-bottom: 10px;"></span>
+        <div>${t('rankLoading')}</div>
+      </div>
+      <div class="btns" style="margin-top: 10px;">
+        <button class="primary" data-close>${t('closeBtn')}</button>
+      </div>
+    </div>
+  `;
+
+  root.appendChild(overlay);
+
+  overlay.addEventListener('click', (e) => {
+    const tgt = e.target as HTMLElement;
+    if (tgt.closest('[data-close]')) {
+      overlay.remove();
+      onClose();
+    }
+  });
+
+  // 비동기 데이터 통신 수행
+  void connectGameServer().then(async (server) => {
+    try {
+      // 1. 처음엔 임시 기록 불러오기
+      let [top, my] = await Promise.all([
+        server.remoteFunction('getTopRankings'),
+        server.remoteFunction('getMyBestRank'),
+      ]);
+
+      // 2. 자동 싱크 (로컬 완료 기록이 서버 기록보다 높은 경우)
+      const localMaxCompleted = store.highStage - 1;
+      const serverBest = my.bestEntry ? my.bestEntry.bestStage : 0;
+      
+      if (localMaxCompleted > serverBest && localMaxCompleted >= 1) {
+        // 자동 제출 (이름은 지갑주소 앞6자리 또는 기본이름으로)
+        const defNick = my.bestEntry?.nickname || `Kitten_${server.account.substring(2, 6)}`;
+        await server.remoteFunction('submitStageRecord', [localMaxCompleted, defNick]);
+        
+        // 다시 데이터 리로딩
+        [top, my] = await Promise.all([
+          server.remoteFunction('getTopRankings'),
+          server.remoteFunction('getMyBestRank'),
+        ]);
+      }
+
+      // 3. 메인 콘텐츠 렌더링
+      const renderContent = () => {
+        const topList = top as any[];
+        const myRankInfo = my as { bestEntry: any; rank: number };
+        const myNickname = myRankInfo.bestEntry?.nickname || `Kitten_${server.account.substring(2, 6)}`;
+
+        const topRowsHtml = topList.length === 0
+          ? `<div style="text-align:center; padding: 20px; color:#6b4f2a; font-weight:bold; font-size:14px;">${t('rankNoRecord')}</div>`
+          : topList.map((entry, idx) => {
+              const isMe = entry.account === server.account;
+              const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+              const rowBg = isMe ? 'background: #ffedd5; border: 2px solid #ff9f68;' : 'background: rgba(107,79,42,0.06);';
+              return `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; margin-bottom: 6px; border-radius: 10px; ${rowBg} font-size: 14px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-weight: 800; min-width: 28px; text-align: left;">${medal}</span>
+                    <span style="font-weight: 700; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${entry.nickname}</span>
+                    ${isMe ? `<span style="font-size: 10px; background: #ff9f68; color: white; padding: 1px 4px; border-radius: 4px; font-weight: bold;">ME</span>` : ''}
+                  </div>
+                  <span style="font-weight: 800; color: #c9722e;">${tf('rankStage', { n: entry.bestStage })}</span>
+                </div>
+              `;
+            }).join('');
+
+        const myBestHtml = myRankInfo.bestEntry
+          ? `<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 12px; background: #fff1f2; border: 1.5px solid #fda4af; font-size: 14px; font-weight: bold; margin-bottom: 12px; text-align: left;">
+               <div style="display: flex; align-items: center; gap: 6px;">
+                 <span style="color:#e11d48; font-weight:900;">★ Rank #${myRankInfo.rank}</span>
+                 <span style="color:#4a3b32; opacity:0.8;">${myRankInfo.bestEntry.nickname}</span>
+               </div>
+               <span style="color:#e11d48;">${tf('rankStage', { n: myRankInfo.bestEntry.bestStage })}</span>
+             </div>`
+          : `<div style="text-align: center; font-size:12px; opacity:0.6; font-weight:bold; margin-bottom: 12px;">${t('rankNoRecord')}</div>`;
+
+        const pnl = overlay.querySelector('.panel')!;
+        pnl.innerHTML = `
+          <h2 style="margin-bottom:12px; font-size: 24px;">${t('rankTitle')}</h2>
+          
+          <!-- 랭킹 리스트 (Top 20) -->
+          <div class="rank-list" style="max-height: 180px; overflow-y: auto; margin-bottom: 12px; padding-right: 4px; text-align: left;">
+            ${topRowsHtml}
+          </div>
+
+          <!-- 나의 랭킹 정보 -->
+          <div style="text-align: left; margin-top: 10px;">
+            <div style="font-size: 11px; font-weight: 800; color:#6b4f2a; text-transform: uppercase; margin-bottom: 4px;">${t('rankYourBest')}</div>
+            ${myBestHtml}
+          </div>
+
+          <!-- 닉네임 입력폼 -->
+          <div style="display: flex; gap: 6px; margin-bottom: 16px; align-items: center;">
+            <input type="text" id="rank-nick-input" class="nick-input" value="${myNickname}" placeholder="${t('rankPlaceholder')}" maxlength="15" style="flex: 1; padding: 10px; border-radius: 12px; border: 2px solid rgba(107,79,42,0.2); font-size:13px; font-weight:700; color:var(--ink); background:#fff;" />
+            <button id="rank-update-btn" style="padding: 10px 14px; background:var(--accent); color:#fff; border:none; border-radius:12px; font-weight:800; font-size:13px; cursor:pointer; height: 100%; transition: transform 0.1s ease;">${t('rankUpdateName')}</button>
+          </div>
+
+          <div id="rank-error" style="color: #e11d48; font-size: 11px; font-weight: bold; margin-top: -12px; margin-bottom: 12px; text-align: left; display: none;"></div>
+
+          <div class="btns">
+            <button class="primary" data-close>${t('closeBtn')}</button>
+          </div>
+        `;
+
+        // 닉네임 변경 버튼 클릭 리스너 바인딩
+        const updateBtn = pnl.querySelector('#rank-update-btn') as HTMLButtonElement;
+        const nickInput = pnl.querySelector('#rank-nick-input') as HTMLInputElement;
+        const errDiv = pnl.querySelector('#rank-error') as HTMLDivElement;
+
+        updateBtn.addEventListener('click', async () => {
+          const val = nickInput.value.trim();
+          if (!val) {
+            errDiv.textContent = t('rankEmptyName');
+            errDiv.style.display = 'block';
+            return;
+          }
+          if (val.length > 15) {
+            errDiv.textContent = t('rankNameTooLong');
+            errDiv.style.display = 'block';
+            return;
+          }
+          errDiv.style.display = 'none';
+          updateBtn.disabled = true;
+          updateBtn.textContent = t('rankSaving');
+          
+          try {
+            // 현재 해금된 최고 스테이지 기록으로 닉네임과 점수를 등록/수정합니다.
+            const submitStage = Math.max(localMaxCompleted, serverBest, 1);
+            await server.remoteFunction('submitStageRecord', [submitStage, val]);
+            
+            // 데이터 재호출 및 뷰 업데이트
+            [top, my] = await Promise.all([
+              server.remoteFunction('getTopRankings'),
+              server.remoteFunction('getMyBestRank'),
+            ]);
+            
+            renderContent();
+          } catch (err: any) {
+            errDiv.textContent = err.message || 'Failed to update';
+            errDiv.style.display = 'block';
+            updateBtn.disabled = false;
+            updateBtn.textContent = t('rankUpdateName');
+          }
+        });
+      };
+
+      renderContent();
+    } catch (error) {
+      console.error('Failed to render ranking screen', error);
+      const pnl = overlay.querySelector('.panel')!;
+      pnl.innerHTML = `
+        <h2>${t('rankTitle')}</h2>
+        <div style="padding: 20px 0; text-align: center; color: #e11d48; font-weight: bold;">
+          Failed to fetch rankings.
+        </div>
+        <div class="btns">
+          <button class="primary" data-close>${t('closeBtn')}</button>
+        </div>
+      `;
+    }
+  });
 }

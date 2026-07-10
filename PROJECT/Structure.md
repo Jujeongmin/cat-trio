@@ -2,25 +2,25 @@
 
 ## Key Files
 
-### `src/main.tsx`
-Vite entry point. Mounts the root `<App />` component into the DOM.
+### `server/src/server.ts`
+TypeScript-based game server code containing:
+- `submitStageRecord(bestStage, nickname)`: Validates and persists high-stage records per user account under the `"rankings"` collection. Ensures old records are cleared to avoid duplication, and supports nickname updates.
+- `getTopRankings()`: Queries the `"rankings"` collection, sorting entries by `bestStage` in descending order, returning the top 20 rankings.
+- `getMyBestRank()`: Computes the player's personal rank by counting how many other players completed strictly higher stages.
 
-### `src/types.ts`
-Holds the schema and TypeScript interfaces for the tiles, slot status, and game states (e.g., `Tile`, `GameState`, `TileType`).
+### `server/test/server.test.ts`
+Full test suite verifying the server's record submission, preventing record downgrades, and verifying correct ranking math.
 
-### `src/components/CatSVG.tsx`
-Contains the SVG renderer definitions for the 12 cute kitten faces and items (Siamese, Orange tabby, Calico, Grey, Black, White fluff, Scottish fold, Sphynx, Fish bone, Milk carton, Yarn ball, Lucky paw). Also exports metadata containing theme colors and Tailwind borders.
+### `game/src/server.ts`
+Initializes a client-side singleton of the `GameServer` instance and exports async helpers to connect to the backend server dynamically.
 
-### `src/utils/audio.ts`
-Uses the Web Audio API to procedurally generate all game sounds:
-- `playClick()`: Bubble pop click.
-- `playMeow()`: Real-time frequency sweep nasal bandpass cat meow.
-- `playMatch()`: Sweet, sparkling major chimes.
-- `playWin()`: Ascending C-Major chord arpeggio victory fanfare.
-- `playLose()`: Melancholic minor-descending sad slide.
+### `game/src/screens.ts`
+Contains UI layout engines. Updated to:
+- Render a 🏆 **Leaderboard button** in the top bar of the Stage Select card page.
+- Render a **showRanking Dialog** displaying the Top 20 ranking rows, custom badges for 🥇/🥈/🥉, highlighting the player's own rank, and offering an interactive text input to modify nicknames (with full length and presence validation).
 
-### `src/App.tsx`
-Central controller containing the level generation algorithm, collision overlap checking, game loop triggers, slot deck management, power-up state transitions (Undo, Shuffle, Hold Drawer), and UI layouts (modals for tutorial, win, and lose).
+### `game/src/i18n.ts`
+Multi-language translations. Updated with Korean and English localization strings for the entire ranking modal and errors.
 
-### `src/App.css`
-App-level stylesheet with root rules, background settings, and pop-in keyframe animations.
+### `game/src/main.ts`
+Vite entry point for vanilla TS. Updated to trigger background server connections at boot and instantly upload cleared stages in the background upon winning a level.

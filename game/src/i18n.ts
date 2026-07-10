@@ -50,6 +50,17 @@ const dict = {
   adTimerWait: { ko: '{n}초 후 닫기 가능', en: 'Closable in {n}s' },
   adTimerReady: { ko: '보상을 받을 수 있어요!', en: 'You can claim your reward!' },
   adCloseAria: { ko: '닫기', en: 'Close' },
+
+  rankTitle: { ko: '🏆 캣 트리오 랭킹', en: '🏆 Cat Trio Rankings' },
+  rankStage: { ko: '스테이지 {n}', en: 'Stage {n}' },
+  rankYourBest: { ko: '나의 최고 기록', en: 'Your Best Record' },
+  rankLoading: { ko: '랭킹 불러오는 중...', en: 'Loading rankings...' },
+  rankNoRecord: { ko: '등록된 기록이 없습니다', en: 'No record submitted yet' },
+  rankUpdateName: { ko: '닉네임 변경', en: 'Update' },
+  rankPlaceholder: { ko: '닉네임 입력 (최대 15자)', en: 'Enter nickname (max 15 chars)' },
+  rankEmptyName: { ko: '닉네임을 입력해 주세요', en: 'Please enter a nickname' },
+  rankNameTooLong: { ko: '닉네임은 15자 이하여야 합니다', en: 'Nickname cannot exceed 15 characters' },
+  rankSaving: { ko: '저장 중...', en: 'Saving...' },
 } as const;
 
 type Key = keyof typeof dict;

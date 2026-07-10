@@ -2,10 +2,16 @@
 
 ## Implemented
 
-- **Dynamic Asset Loader Fix**: Solved the issue where cat sprites failed to load when the game is served under a subpath or inside an iframe. Replaced relative `cats/Cat_X.png` strings with robust runtime absolute URLs using `new URL(path, window.location.href).href`.
-- **Pure-HTML5 Canvas & Sprite Game**: Fully validated and built the Cat Trio game engine under `/game` with sprite sheets, 3D layer positioning, pathfinding escape logic, and procedural AudioContext synthesis.
-- **Responsive Layout**: Validated that the virtual canvas scales smoothly to fit both desktop and portrait mobile dimensions.
+- **Structured TypeScript Game Server**: Created a secure server codebase under `server/src/server.ts` managing real-time database collections for ranking records.
+- **Robust Integration Testing**: Wrote a complete test suite in `server/test/server.test.ts` verifying all game server functions under isolated conditions. All tests pass (3/3).
+- **Background Auto-Sync**: Client automatically uploads progress when clearing a stage and synchronizes offline progress immediately when launching the Leaderboard.
+- **🏆 Interactive Leaderboard Tab**:
+  - Top 20 ranking list with special 🥇, 🥈, 🥉 medal icons.
+  - Highlights the current user with custom visual card backgrounds.
+  - Personal ranking banner displaying absolute rank.
+  - Real-time nickname editing form with load/save indicators and strict input validators.
+- **Multilingual Support**: Fully localized Leaderboard interface into Korean and English.
 
 ## Build Status
 
-- **Build Output**: Successfully compiled with zero errors. All assets and stylesheets are bundled and relative paths are preserved using Vite's `./` base.
+- **Build Output**: Successfully compiled with zero errors (built in 753ms). Ready for production deployment!

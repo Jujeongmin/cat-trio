@@ -6,6 +6,7 @@ import { showStageSelect, showResult, showSettings } from './screens';
 import { GameResult } from './types';
 import { unlockAudio } from './audio';
 import { applyDocumentLang } from './i18n';
+import { getGameServer, connectGameServer } from './server';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 
@@ -35,6 +36,17 @@ function handleEnd(result: GameResult) {
   const isNewBest = result.win
     ? recordClear(result.stageId, result.stars, result.coins)
     : false;
+
+  if (result.win) {
+    const s = getGameServer();
+    if (s.connected) {
+      void s.remoteFunction('getMyBestRank').then(async (myRank) => {
+        const nick = myRank.bestEntry?.nickname || `Kitten_${s.account.substring(2, 6)}`;
+        await s.remoteFunction('submitStageRecord', [result.stageId, nick]);
+      });
+    }
+  }
+
   showResult(app, result, isNewBest, {
     onNext: () => startStage(result.stageId + 1),
     onRetry: () => startStage(result.stageId),
@@ -54,5 +66,7 @@ function openSettings() {
 }
 
 applyDocumentLang();
+// 게임 부팅 시 백그라운드에서 실시간 서버 연결을 시작합니다.
+void connectGameServer();
 // 진입: 스테이지 선택 화면
 toSelect();

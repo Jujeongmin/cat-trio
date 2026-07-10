@@ -4,8 +4,13 @@ import { makeStage } from './stages';
 import { store, persist, resetSave, recordClear } from './storage';
 import { showStageSelect, showResult, showSettings } from './screens';
 import { GameResult } from './types';
+import { unlockAudio } from './audio';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
+
+// 브라우저 자동재생 정책 — 첫 사용자 제스처에서 오디오를 깨우고
+// 설정이 켜져 있으면 BGM 을 시작한다.
+document.addEventListener('pointerdown', unlockAudio, { once: true });
 
 let current: Game | null = null;
 

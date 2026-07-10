@@ -1,5 +1,6 @@
 import { store, persist } from './storage';
 import { GameResult } from './types';
+import { bgm } from './audio';
 
 // 최고 해금 스테이지 이후로 미리 보여줄 잠금 타일 수
 const LOOKAHEAD = 6;
@@ -122,7 +123,7 @@ export function showResult(
   root.appendChild(overlay);
 }
 
-/** 설정 모달 (명세 13) — 오디오/진동 실제 적용과 다국어는 Phase 5에서 확장 */
+/** 설정 모달 (명세 13) */
 export function showSettings(root: HTMLElement, onReset: () => void): void {
   const s = store.settings;
   const overlay = document.createElement('div');
@@ -159,6 +160,7 @@ export function showSettings(root: HTMLElement, onReset: () => void): void {
       store.settings[key] = !store.settings[key];
       tg.classList.toggle('on', store.settings[key]);
       persist();
+      if (key === 'bgm') (store.settings.bgm ? bgm.start() : bgm.stop());
       return;
     }
     if (t.closest('[data-lang]')) {

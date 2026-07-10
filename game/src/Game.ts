@@ -3,6 +3,7 @@ import { catSprite } from './assets';
 import { cellKey, reachableEmpty, isEscapable } from './escape';
 import { store, persist } from './storage';
 import { haptics } from './haptics';
+import { sfx } from './audio';
 import {
   VW,
   VH,
@@ -501,6 +502,7 @@ export class Game {
     if (target.classList.contains('locked')) return; // 탈출 불가
     if (this.slots.length >= this.capacity) return;
     haptics.tap();
+    sfx.tap();
     void this.select(cat);
   };
 
@@ -585,6 +587,7 @@ export class Game {
     }
     if (!match) return false;
     haptics.match();
+    sfx.match();
     if (this.tutorial) this.finishTutorial(); // 첫 3매치 성사 → 튜토리얼 완료
 
     const removing = match;
@@ -715,6 +718,7 @@ export class Game {
     this.updateItemBar();
     clearInterval(this.timerId);
     win ? haptics.win() : haptics.lose();
+    win ? sfx.win() : sfx.lose();
     const timeMs = performance.now() - this.startTime;
     const stars = win ? this.stars : 0;
     const coins = win

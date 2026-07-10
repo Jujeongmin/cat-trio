@@ -106,6 +106,15 @@ body {
   color: #c9722e;
 }
 
+/* 코인 아이콘 (이모지 🪙 대체) — 텍스트 옆에 인라인으로 놓는다 */
+.coin-ic {
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  vertical-align: -0.22em;
+  background: url(coin.png) center / contain no-repeat;
+}
+
 /* 보드 */
 .board {
   position: absolute;

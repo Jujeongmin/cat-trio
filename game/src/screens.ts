@@ -42,7 +42,7 @@ export function showStageSelect(
     <header class="select-top">
       <h1>🐾 Cat Trio</h1>
       <div class="select-info">
-        <span class="coin">🪙 ${store.coins}</span>
+        <span class="coin"><i class="coin-ic"></i> ${store.coins}</span>
         <button class="icon-btn settings-btn" aria-label="설정">⚙️</button>
       </div>
     </header>
@@ -95,7 +95,7 @@ export function showResult(
              ${isNewBest ? '<div class="new-best">최고 기록 갱신! ✨</div>' : ''}
              <div class="result-rows">
                <div><span>⏱ 시간</span><b>${sec}s</b></div>
-               <div><span>🪙 코인</span><b>+${result.coins}</b></div>
+               <div><span><i class="coin-ic"></i> 코인</span><b>+${result.coins}</b></div>
              </div>`
           : `<p>슬롯이 가득 찼거나 시간이 다 됐어요</p>`
       }

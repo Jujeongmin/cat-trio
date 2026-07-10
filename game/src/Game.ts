@@ -153,15 +153,15 @@ export class Game {
     this.itemsEl.innerHTML = `
       <button class="item-btn" data-item="shuffle">
         <span class="item-ic">🔀</span><span class="item-label">셔플</span>
-        <span class="item-cost">🪙${ITEM_COST.shuffle}</span>
+        <span class="item-cost"><i class="coin-ic"></i>${ITEM_COST.shuffle}</span>
       </button>
       <button class="item-btn" data-item="undo">
         <span class="item-ic">↩️</span><span class="item-label">되돌리기</span>
-        <span class="item-cost">🪙${ITEM_COST.undo}</span>
+        <span class="item-cost"><i class="coin-ic"></i>${ITEM_COST.undo}</span>
       </button>
       <button class="item-btn" data-item="slotplus">
         <span class="item-ic">➕</span><span class="item-label">슬롯+1</span>
-        <span class="item-cost">🪙${ITEM_COST.slotPlus}</span>
+        <span class="item-cost"><i class="coin-ic"></i>${ITEM_COST.slotPlus}</span>
       </button>
     `;
     this.itemsEl.addEventListener('click', (e) => {
@@ -188,7 +188,7 @@ export class Game {
     this.hudEl.innerHTML = `
       <button class="back-btn" aria-label="뒤로">‹</button>
       <div class="hud-item">STAGE <b>${this.stage.id}</b></div>
-      <div class="hud-item">🪙 <b>${store.coins}</b></div>
+      <div class="hud-item"><i class="coin-ic"></i> <b>${store.coins}</b></div>
     `;
   }
 

@@ -774,7 +774,9 @@ body {
   position: absolute;
   left: 24px;
   right: 24px;
-  top: 92px;
+  /* 스테이지1(튜토리얼 전용)은 3x4 칸이라 보드 내용이 대략 438px 아래서
+     끝난다 — 슬롯(664px) 사이 빈 공간에 놓아 보드/고양이를 가리지 않게 */
+  top: 476px;
   z-index: 1000;
   background: var(--panel);
   border-radius: 16px;

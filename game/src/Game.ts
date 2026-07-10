@@ -37,6 +37,10 @@ const timeLimitFor = (stage: StageData) => {
   return (30 + (stage.cats.length + queued) * 2.2) * 1000;
 };
 
+// 별 구간별 코인 보상. 재도전 시 무한 파밍 방지를 위해 실제 지급액은
+// (이번 별 구간 보상 - 이전 최고 별 구간 보상)의 차액만 지급한다.
+const coinsForStars = (stars: number) => (stars > 0 ? 50 + stars * 30 : 0);
+
 export class Game {
   private wrap!: HTMLDivElement;
   private boardEl!: HTMLDivElement;
@@ -721,9 +725,11 @@ export class Game {
     win ? sfx.win() : sfx.lose();
     const timeMs = performance.now() - this.startTime;
     const stars = win ? this.stars : 0;
-    const coins = win
-      ? 50 + stars * 30 + Math.max(0, Math.floor((this.limitMs - timeMs) / 1000))
-      : 0;
+    // 이전 최고 별보다 개선됐을 때만, 그 구간 차액만큼만 코인 지급
+    // (이미 3개 별로 깬 스테이지를 재도전해도 코인이 계속 나오는 파밍 방지)
+    const prevBestStars = store.bestStars[this.stage.id] ?? 0;
+    const coins =
+      win && stars > prevBestStars ? coinsForStars(stars) - coinsForStars(prevBestStars) : 0;
     this.onEnd({ stageId: this.stage.id, win, stars, coins, timeMs });
   }
 }

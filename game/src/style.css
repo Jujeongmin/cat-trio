@@ -802,3 +802,159 @@ body {
   padding: 7px 16px;
   cursor: pointer;
 }
+
+/* ===== 광고 보상 버튼 (스테이지 선택 / 결과 화면) ===== */
+.ad-free-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 14px;
+  font: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  background: linear-gradient(#6fc7e0, #3fa9c9);
+  border: none;
+  border-radius: 12px;
+  padding: 10px;
+  cursor: pointer;
+}
+.ad-free-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.ad-free-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.ad-free-ic {
+  font-size: 15px;
+}
+
+.ad-double-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin: 4px 0 14px;
+  font: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  background: linear-gradient(#6fc7e0, #3fa9c9);
+  border: none;
+  border-radius: 12px;
+  padding: 10px;
+  cursor: pointer;
+}
+.ad-double-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.ad-double-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.ad-double-btn.claimed {
+  background: #8bc98f;
+  opacity: 1;
+}
+
+/* ===== 보상형 광고 재생 오버레이 (SDK 스텁) ===== */
+.ad-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.88);
+}
+.ad-frame {
+  position: relative;
+  width: min(320px, 86vw);
+  background: #14171c;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.ad-badge {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #14171c;
+  background: #ffce3d;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.ad-stage {
+  height: 200px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2a3542, #1a2028);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.ad-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.18);
+  border-top-color: #6fc7e0;
+  animation: adspin 0.9s linear infinite;
+}
+@keyframes adspin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ad-caption {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+}
+.ad-progress {
+  margin-top: 12px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+.ad-progress i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #6fc7e0, #3fa9c9);
+  transition: width 0.1s linear;
+}
+.ad-foot {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ad-timer {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.65);
+}
+.ad-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 15px;
+  cursor: not-allowed;
+}
+.ad-close.ready {
+  background: #ff9f68;
+  color: #fff;
+  cursor: pointer;
+}

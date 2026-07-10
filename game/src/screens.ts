@@ -1,6 +1,9 @@
 import { store, persist } from './storage';
 import { GameResult } from './types';
 import { bgm } from './audio';
+import { playRewardedAd } from './ads';
+
+const FREE_AD_COINS = 30; // 스테이지 선택 화면의 "광고 보고 코인 받기" 보상
 
 // 최고 해금 스테이지 이후로 미리 보여줄 잠금 타일 수
 const LOOKAHEAD = 6;
@@ -47,13 +50,32 @@ export function showStageSelect(
         <button class="icon-btn settings-btn" aria-label="설정">⚙️</button>
       </div>
     </header>
+    <button class="ad-free-btn">
+      <span class="ad-free-ic">🎬</span>
+      광고 보고 <i class="coin-ic"></i> ${FREE_AD_COINS} 받기
+    </button>
     <div class="tiles">${tiles}</div>
   `;
+
+  const coinLabel = screen.querySelector('.coin')!;
+  const adBtn = screen.querySelector<HTMLButtonElement>('.ad-free-btn')!;
 
   screen.addEventListener('click', (e) => {
     const t = e.target as HTMLElement;
     if (t.closest('.settings-btn')) {
       onSettings();
+      return;
+    }
+    if (t.closest('.ad-free-btn')) {
+      if (adBtn.disabled) return;
+      adBtn.disabled = true;
+      void playRewardedAd(root).then((res) => {
+        adBtn.disabled = false;
+        if (res !== 'rewarded') return;
+        store.coins += FREE_AD_COINS;
+        persist();
+        coinLabel.innerHTML = `<i class="coin-ic"></i> ${store.coins}`;
+      });
       return;
     }
     const tile = t.closest('.tile') as HTMLButtonElement | null;
@@ -96,8 +118,15 @@ export function showResult(
              ${isNewBest ? '<div class="new-best">최고 기록 갱신! ✨</div>' : ''}
              <div class="result-rows">
                <div><span>⏱ 시간</span><b>${sec}s</b></div>
-               <div><span><i class="coin-ic"></i> 코인</span><b>+${result.coins}</b></div>
-             </div>`
+               <div><span><i class="coin-ic"></i> 코인</span><b class="coin-earned">+${result.coins}</b></div>
+             </div>
+             ${
+               result.coins > 0
+                 ? `<button class="ad-double-btn">
+                      <span class="ad-free-ic">🎬</span> 광고 보고 코인 2배 받기
+                    </button>`
+                 : ''
+             }`
           : `<p>슬롯이 가득 찼거나 시간이 다 됐어요</p>`
       }
       <div class="btns">
@@ -112,7 +141,28 @@ export function showResult(
   `;
 
   overlay.addEventListener('click', (e) => {
-    const act = (e.target as HTMLElement).dataset.act;
+    const t = e.target as HTMLElement;
+
+    const adBtn = t.closest('.ad-double-btn') as HTMLButtonElement | null;
+    if (adBtn) {
+      if (adBtn.disabled) return;
+      adBtn.disabled = true;
+      void playRewardedAd(root).then((res) => {
+        if (res !== 'rewarded') {
+          adBtn.disabled = false;
+          return;
+        }
+        store.coins += result.coins; // 이번 스테이지 보상만큼 한 번 더 지급 = 2배
+        persist();
+        const coinEl = overlay.querySelector('.coin-earned')!;
+        coinEl.textContent = `+${result.coins * 2}`;
+        adBtn.textContent = '✓ 코인 2배 받음';
+        adBtn.classList.add('claimed');
+      });
+      return;
+    }
+
+    const act = t.dataset.act;
     if (!act) return;
     overlay.remove();
     if (act === 'next') actions.onNext();

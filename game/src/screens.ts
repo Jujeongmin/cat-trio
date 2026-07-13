@@ -52,6 +52,7 @@ export function showStageSelect(
       <div class="select-info" style="display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%;">
         <span class="coin"><i class="coin-ic"></i> ${store.coins}</span>
         <button class="lang-toggle-btn" aria-label="Language"></button>
+        <button class="icon-btn shop-btn" style="font-size: 18px;" aria-label="${t('shopAria')}">🛍️</button>
         <button class="icon-btn rank-btn" style="font-size: 18px;" aria-label="Leaderboard">🏆</button>
         <button class="icon-btn settings-btn" aria-label="${t('settingsAria')}">⚙️</button>
       </div>

@@ -62,6 +62,10 @@ const dict = {
   rankEmptyName: { ko: '닉네임을 입력해 주세요', en: 'Please enter a nickname' },
   rankNameTooLong: { ko: '닉네임은 15자 이하여야 합니다', en: 'Nickname cannot exceed 15 characters' },
   rankSaving: { ko: '저장 중...', en: 'Saving...' },
+  rankMeBadge: { ko: '나', en: 'ME' },
+  rankMyRank: { ko: '순위 #{n}', en: 'Rank #{n}' },
+  rankFetchFailed: { ko: '랭킹을 불러오지 못했어요.', en: 'Failed to fetch rankings.' },
+  rankUpdateFailed: { ko: '변경에 실패했어요', en: 'Failed to update' },
 
   shopAria: { ko: '상점', en: 'Shop' },
   shopTitle: { ko: '🛍️ 코스튬 상점', en: '🛍️ Costume Shop' },

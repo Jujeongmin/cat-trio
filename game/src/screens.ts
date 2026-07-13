@@ -433,7 +433,7 @@ export function showRanking(root: HTMLElement, onClose: () => void): void {
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-weight: 800; min-width: 28px; text-align: left;">${medal}</span>
                     <span style="font-weight: 700; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${entry.nickname}</span>
-                    ${isMe ? `<span style="font-size: 10px; background: #ff9f68; color: white; padding: 1px 4px; border-radius: 4px; font-weight: bold;">ME</span>` : ''}
+                    ${isMe ? `<span style="font-size: 10px; background: #ff9f68; color: white; padding: 1px 4px; border-radius: 4px; font-weight: bold;">${t('rankMeBadge')}</span>` : ''}
                   </div>
                   <span style="font-weight: 800; color: #c9722e;">${tf('rankStage', { n: entry.bestStage })}</span>
                 </div>
@@ -443,7 +443,7 @@ export function showRanking(root: HTMLElement, onClose: () => void): void {
         const myBestHtml = myRankInfo.bestEntry
           ? `<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 12px; background: #fff1f2; border: 1.5px solid #fda4af; font-size: 14px; font-weight: bold; margin-bottom: 12px; text-align: left;">
                <div style="display: flex; align-items: center; gap: 6px;">
-                 <span style="color:#e11d48; font-weight:900;">★ Rank #${myRankInfo.rank}</span>
+                 <span style="color:#e11d48; font-weight:900;">★ ${tf('rankMyRank', { n: myRankInfo.rank })}</span>
                  <span style="color:#4a3b32; opacity:0.8;">${myRankInfo.bestEntry.nickname}</span>
                </div>
                <span style="color:#e11d48;">${tf('rankStage', { n: myRankInfo.bestEntry.bestStage })}</span>
@@ -512,7 +512,7 @@ export function showRanking(root: HTMLElement, onClose: () => void): void {
             
             renderContent();
           } catch (err: any) {
-            errDiv.textContent = err.message || 'Failed to update';
+            errDiv.textContent = err.message || t('rankUpdateFailed');
             errDiv.style.display = 'block';
             updateBtn.disabled = false;
             updateBtn.textContent = t('rankUpdateName');
@@ -527,7 +527,7 @@ export function showRanking(root: HTMLElement, onClose: () => void): void {
       pnl.innerHTML = `
         <h2>${t('rankTitle')}</h2>
         <div style="padding: 20px 0; text-align: center; color: #e11d48; font-weight: bold;">
-          Failed to fetch rankings.
+          ${t('rankFetchFailed')}
         </div>
         <div class="btns">
           <button class="primary" data-close>${t('closeBtn')}</button>

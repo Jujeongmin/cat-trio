@@ -382,10 +382,22 @@ export function showRanking(root: HTMLElement, onClose: () => void): void {
   // 비동기 데이터 통신 수행
   void connectGameServer().then(async (server) => {
     try {
+      if (!server.connected) {
+        throw new Error('Server connection failed');
+      }
+
+      // 안전한 타임아웃 래퍼 정의 (최대 4초 대기 후 Reject)
+      const callWithTimeout = async (fn: string, args: any[] = []): Promise<any> => {
+        return Promise.race([
+          server.remoteFunction(fn, args),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 4000))
+        ]);
+      };
+
       // 1. 처음엔 임시 기록 불러오기
       let [top, my] = await Promise.all([
-        server.remoteFunction('getTopRankings'),
-        server.remoteFunction('getMyBestRank'),
+        callWithTimeout('getTopRankings'),
+        callWithTimeout('getMyBestRank'),
       ]);
 
       // 2. 자동 싱크 (로컬 완료 기록이 서버 기록보다 높은 경우)
@@ -395,12 +407,12 @@ export function showRanking(root: HTMLElement, onClose: () => void): void {
       if (localMaxCompleted > serverBest && localMaxCompleted >= 1) {
         // 자동 제출 (이름은 지갑주소 앞6자리 또는 기본이름으로)
         const defNick = my.bestEntry?.nickname || `Kitten_${server.account.substring(2, 6)}`;
-        await server.remoteFunction('submitStageRecord', [localMaxCompleted, defNick]);
+        await callWithTimeout('submitStageRecord', [localMaxCompleted, defNick]);
         
         // 다시 데이터 리로딩
         [top, my] = await Promise.all([
-          server.remoteFunction('getTopRankings'),
-          server.remoteFunction('getMyBestRank'),
+          callWithTimeout('getTopRankings'),
+          callWithTimeout('getMyBestRank'),
         ]);
       }
 
@@ -490,12 +502,12 @@ export function showRanking(root: HTMLElement, onClose: () => void): void {
           try {
             // 현재 해금된 최고 스테이지 기록으로 닉네임과 점수를 등록/수정합니다.
             const submitStage = Math.max(localMaxCompleted, serverBest, 1);
-            await server.remoteFunction('submitStageRecord', [submitStage, val]);
+            await callWithTimeout('submitStageRecord', [submitStage, val]);
             
             // 데이터 재호출 및 뷰 업데이트
             [top, my] = await Promise.all([
-              server.remoteFunction('getTopRankings'),
-              server.remoteFunction('getMyBestRank'),
+              callWithTimeout('getTopRankings'),
+              callWithTimeout('getMyBestRank'),
             ]);
             
             renderContent();

@@ -34,14 +34,15 @@ body {
 
 #app {
   position: relative;
-  height: 95vh; /* 화면 세로 길이에 맞춰 유연하게 높이 최대화 */
-  aspect-ratio: 480 / 760; /* 세로비 고정으로 가로가 자동으로 적절한 비율 유지 */
+  height: 100vh; /* 화면 세로 길이에 맞춰 유연하게 높이 최대화 */
+  aspect-ratio: 480 / 1000; /* 가상 캔버스와 동일한 세로비 — 폰 형태 프레임 */
   overflow: hidden;
   background: transparent; /* 목업 테두리(베젤)와 배경을 없애고 전체 화면 그라데이션과 자연스럽게 융합 */
 }
 
-/* 실제 모바일 화면 크기이거나 창이 작아질 경우 100% 풀스크린으로 확장 */
-@media (max-width: 480px), (max-height: 760px) {
+/* 폭이 좁은(=실제 모바일) 화면에서만 100% 풀스크린으로 확장.
+   넓은 데스크톱에서는 위 aspect-ratio 규칙이 살아 세로 폰 프레임으로 보인다. */
+@media (max-width: 560px) {
   #app {
     width: 100%;
     height: 100%;
@@ -357,28 +358,35 @@ body {
   border: 2px dashed rgba(107, 79, 42, 0.3);
 }
 
-/* 아이템 바 (셔플 / 되돌리기 / 슬롯+1) */
+/* 하단 컨트롤 덱 (셔플 / 되돌리기 / 슬롯+1) — 슬롯 아래부터 캔버스 바닥까지
+   채우는 라이즈드 패널. 늘어난 세로 공간을 게임 UI 로 메운다. */
 .itembar {
   position: absolute;
-  left: 14px;
-  right: 14px;
-  top: 704px;
-  height: 46px;
+  left: 0;
+  right: 0;
+  top: 716px;
+  bottom: 0;
+  z-index: 8;
   display: flex;
-  gap: 8px;
-  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 18px 34px;
+  background: linear-gradient(#fff8ea, #f4e4c2);
+  border-radius: 30px 30px 0 0;
+  box-shadow: 0 -6px 20px rgba(107, 79, 42, 0.18);
 }
 .item-btn {
   flex: 1;
-  max-width: 140px;
+  align-self: stretch;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 8px;
   border: none;
-  border-radius: 12px;
-  background: var(--panel);
-  box-shadow: 0 3px 0 rgba(107, 79, 42, 0.2);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 4px 0 rgba(107, 79, 42, 0.2);
   font: inherit;
   font-weight: 700;
   color: var(--ink);
@@ -386,7 +394,8 @@ body {
   transition: transform 0.1s ease;
 }
 .item-btn:active:not(:disabled) {
-  transform: translateY(2px);
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(107, 79, 42, 0.2);
 }
 .item-btn:disabled {
   opacity: 0.45;
@@ -394,15 +403,19 @@ body {
   box-shadow: none;
 }
 .item-ic {
-  font-size: 17px;
+  font-size: 34px;
   line-height: 1;
 }
 .item-label {
-  font-size: 12px;
+  font-size: 15px;
 }
 .item-cost {
-  font-size: 11px;
-  opacity: 0.75;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #c9722e;
 }
 
 /* 결과 오버레이 */

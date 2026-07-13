@@ -14,6 +14,7 @@ import {
   MAX_CAPACITY,
   gridX,
   gridY,
+  setBoardRowSpan,
   slotCenterX,
   slotBoxSize,
   slotCatSize,
@@ -104,6 +105,9 @@ export class Game {
       countEl: null,
     }));
     this.limitMs = timeLimitFor(stage);
+    // 실제 고양이/파이프가 놓인 행 범위를 화면 세로 중앙에 맞춘다 (gridY 오프셋)
+    const rowsUsed = [...this.cats.map((c) => c.row), ...this.spawners.map((s) => s.row)];
+    setBoardRowSpan(Math.min(...rowsUsed), Math.max(...rowsUsed));
     this.build();
     this.renderBoard();
     this.computeEscapable();

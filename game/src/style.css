@@ -20,7 +20,7 @@ body {
   height: 100%;
   overflow: hidden;
   font-family: system-ui, "Segoe UI", "Apple SD Gothic Neo", sans-serif;
-  background-color: #dfd0bd; /* 데스크톱 주변 여백을 부드러운 코지 톤으로 채움 */
+  background: radial-gradient(circle at 50% 0%, var(--bg2), var(--bg)); /* 자연스러운 게임 그라데이션으로 전체 여백 통일 */
   color: var(--ink);
   display: flex;
   align-items: center;
@@ -34,29 +34,20 @@ body {
 
 #app {
   position: relative;
-  height: 95vh; /* 화면 세로 길이에 맞춰 유연하게 높이 최대화 (너무 작게 줄어들지 않음) */
+  height: 95vh; /* 화면 세로 길이에 맞춰 유연하게 높이 최대화 */
   aspect-ratio: 480 / 760; /* 세로비 고정으로 가로가 자동으로 적절한 비율 유지 */
   overflow: hidden;
-  background: radial-gradient(circle at 50% 0%, var(--bg2), var(--bg));
-  border-radius: 28px;
-  box-shadow: 0 20px 60px rgba(107, 79, 42, 0.35);
-  border: 8px solid #4a3b32; /* 고급스러운 브라운 색상의 스마트폰 베젤 테두리 */
+  background: transparent; /* 목업 테두리(베젤)와 배경을 없애고 전체 화면 그라데이션과 자연스럽게 융합 */
 }
 
 /* 실제 모바일 화면 크기이거나 창이 작아질 경우 100% 풀스크린으로 확장 */
 @media (max-width: 480px), (max-height: 760px) {
-  html, body {
-    background-color: var(--bg);
-  }
   #app {
     width: 100%;
     height: 100%;
     max-width: 100%;
     max-height: 100%;
     aspect-ratio: auto;
-    border-radius: 0;
-    box-shadow: none;
-    border: none;
   }
 }
 

@@ -4,31 +4,29 @@ import { t, tf } from './i18n';
 // 보상형 광고 SDK 어댑터 (Verse8 공식 @verse8/ads 패키지)
 //
 // V8 플랫폼 iframe 안에서 postMessage로 부모 창과 통신하며 실제 보상형 광고를 재생합니다.
-// 로컬 개발 환경에서는 시뮬레이션(카운트다운) 방식으로 자동 폴백됩니다.
+// 로컬 개발 환경(DEV)에서만 시뮬레이션(카운트다운)으로 폴백됩니다.
+// 프로덕션에서는 SDK 오류 발생 시 광고 실패로 처리하고 시뮬레이션을 절대 보여주지 않습니다.
 //
 // 호출부(screens.ts)는 playRewardedAd() 하나만 알면 됩니다.
 export type AdResult = 'rewarded' | 'skipped' | 'failed';
 
-const AD_DURATION = 4; // 시뮬레이션 광고 길이 (초)
+const AD_DURATION = 4;
 
-let sdkReady = false;
-let isUnsupported = false;
+let initialized = false;
 
 function ensureInit() {
-  if (!sdkReady) {
+  if (!initialized) {
     Verse8Ads.init({
       debug: import.meta.env.DEV,
     });
-    sdkReady = true;
+    initialized = true;
   }
 }
 
-// ---- 시뮬레이션 (로컬 개발 환경 폴백) ----
+// ---- 시뮬레이션 (개발 환경 전용) ----
 
 function loadAdSimulated(): Promise<boolean> {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(true), 450);
-  });
+  return new Promise((resolve) => setTimeout(() => resolve(true), 450));
 }
 
 function showAdSimulated(container: HTMLElement): Promise<AdResult> {
@@ -73,9 +71,8 @@ function showAdSimulated(container: HTMLElement): Promise<AdResult> {
 
     closeBtn.addEventListener('click', () => {
       clearInterval(tick);
-      const outcome: AdResult = elapsed >= AD_DURATION ? 'rewarded' : 'skipped';
       overlay.remove();
-      resolve(outcome);
+      resolve(elapsed >= AD_DURATION ? 'rewarded' : 'skipped');
     });
   });
 }
@@ -89,9 +86,6 @@ export async function playRewardedAd(
 ): Promise<AdResult> {
   ensureInit();
 
-  // unsupported_env 으로 판정된 세션은 즉시 실패
-  if (isUnsupported) return 'failed';
-
   try {
     const result = await Verse8Ads.showRewarded({ placementId });
 
@@ -101,21 +95,28 @@ export async function playRewardedAd(
       case 'dismissed':
         return 'skipped';
       case 'failed':
-        if (result.error.code === 'busy') {
-          return 'failed'; // 버튼 disable 유지 → 광고 재생 중
-        }
         if (result.error.code === 'unsupported_env') {
-          isUnsupported = true;
-          return 'failed';
+          // 프로덕션에서는 unsupported_env 를 그대로 failed 처리.
+          // 개발 환경에서만 시뮬레이션으로 폴백
+          if (import.meta.env.DEV) {
+            const loaded = await loadAdSimulated();
+            if (!loaded) return 'failed';
+            return showAdSimulated(container);
+          }
         }
         return 'failed';
       default:
         return 'failed';
     }
   } catch {
-    // SDK 자체 예외 → 시뮬레이션으로 폴백 (로컬 개발 환경 등)
-    const loaded = await loadAdSimulated();
-    if (!loaded) return 'failed';
-    return showAdSimulated(container);
+    // SDK 호출 자체 예외 (네트워크, 타임아웃 등)
+    // 개발 환경: 시뮬레이션으로 폴백
+    // 프로덕션: 실패 처리 — 가짜 광고를 절대 보여주지 않음
+    if (import.meta.env.DEV) {
+      const loaded = await loadAdSimulated();
+      if (!loaded) return 'failed';
+      return showAdSimulated(container);
+    }
+    return 'failed';
   }
 }

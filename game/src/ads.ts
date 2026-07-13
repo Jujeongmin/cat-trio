@@ -10,7 +10,7 @@ export type AdResult = 'rewarded' | 'skipped' | 'failed';
 
 // 프로토타입 단계 — 실제 광고 없이 즉시 보상을 준다. 나중에 광고 SDK를
 // 붙일 때 이 값을 false 로 바꾸면 아래 로드→재생 카운트다운 흐름이 그대로 살아난다.
-const PROTOTYPE_INSTANT = true;
+const PROTOTYPE_INSTANT = false;
 
 const AD_DURATION = 4; // 초 — 스킵 가능해지기까지
 

@@ -165,7 +165,7 @@ export function showStageSelect(
     if (tgt.closest('.ad-free-btn')) {
       if (adBtn.disabled) return;
       adBtn.disabled = true;
-      void playRewardedAd(root).then((res) => {
+      void playRewardedAd(root, 'free-coins').then((res) => {
         adBtn.disabled = false;
         if (res !== 'rewarded') return;
         store.coins += FREE_AD_COINS;
@@ -251,7 +251,7 @@ export function showResult(
     if (adBtn) {
       if (adBtn.disabled) return;
       adBtn.disabled = true;
-      void playRewardedAd(root).then((res) => {
+      void playRewardedAd(root, 'double-stage-coins').then((res) => {
         if (res !== 'rewarded') {
           adBtn.disabled = false;
           return;

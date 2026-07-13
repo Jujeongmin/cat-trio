@@ -245,9 +245,11 @@ export class Game {
   };
 
   // ---- 스프라이트 프레임 --------------------------------------------------
+  // 프레임 위치는 CSS 변수로만 지정한다. .cat 아래의 각 레이어(.cat-layer)가
+  // 이 변수를 상속받아 같은 프레임을 보여준다(다중 배경 대신 자식 요소로 겹침).
   private setFrame(el: HTMLElement, col: number, row: number) {
-    el.style.backgroundPositionX = `${col * 50}%`;
-    el.style.backgroundPositionY = `${(row * 100) / 3}%`;
+    el.style.setProperty('--fx', `${col * 50}%`);
+    el.style.setProperty('--fy', `${(row * 100) / 3}%`);
   }
 
   // ---- 렌더링 -------------------------------------------------------------
@@ -342,23 +344,30 @@ export class Game {
     for (const c of this.cats) this.makeCatEl(c);
   }
 
-  // background-image 값. 착용물을 기본 스프라이트 위에 겹친다 — 모자 > 의상 > 고양이 순.
-  // (다중 배경 — 시트 포맷이 같아 프레임 위치/애니메이션이 모든 겹에 함께 적용됨)
-  private spriteFor(type: number): string {
-    const layers: string[] = [];
-    const hat = store.equippedHats[type];
+  // 고양이 스프라이트 + 착용물을 각각 별도의 자식 레이어(.cat-layer)로 쌓는다.
+  // CSS 다중 배경(background-image 여러 겹)은 일부 웹뷰/런타임에서 뒤 레이어가
+  // 렌더되지 않는 문제가 있어(에디터 OK·런치 실패), 겹침을 DOM 요소로 처리한다.
+  // 쌓는 순서(뒤→앞): 고양이 → 의상 → 모자. (나중 자식이 위에 그려짐)
+  private applyLayers(el: HTMLElement, type: number) {
+    el.textContent = '';
+    const urls = [catSprite(type)];
     const clothes = store.equippedClothes[type];
-    if (hat !== undefined) layers.push(`url(${costumeSprite(hat)})`);
-    if (clothes !== undefined) layers.push(`url(${costumeSprite(clothes)})`);
-    layers.push(`url(${catSprite(type)})`);
-    return layers.join(', ');
+    const hat = store.equippedHats[type];
+    if (clothes !== undefined) urls.push(costumeSprite(clothes));
+    if (hat !== undefined) urls.push(costumeSprite(hat));
+    for (const u of urls) {
+      const layer = document.createElement('div');
+      layer.className = 'cat-layer';
+      layer.style.backgroundImage = `url(${u})`;
+      el.appendChild(layer);
+    }
   }
 
   private makeCatEl(cat: { id: string; type: number; col: number; row: number }) {
     const el = document.createElement('div');
     el.className = 'cat';
     el.dataset.id = cat.id;
-    el.style.setProperty('--sheet', this.spriteFor(cat.type));
+    this.applyLayers(el, cat.type);
     el.style.width = `${CELL}px`;
     el.style.height = `${CELL}px`;
     el.style.zIndex = '5';
@@ -684,7 +693,7 @@ export class Game {
     present.forEach((c, i) => {
       c.type = types[i];
       const el = this.els.get(c.id)!;
-      el.style.setProperty('--sheet', this.spriteFor(c.type));
+      this.applyLayers(el, c.type);
       el.classList.add('shuffle-pulse');
       el.addEventListener('animationend', () => el.classList.remove('shuffle-pulse'), {
         once: true,

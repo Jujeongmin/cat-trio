@@ -549,15 +549,22 @@ export function showShop(root: HTMLElement, onClose: () => void): void {
 
   let currentType: number | null = null;
 
-  // 타입이 현재 장착 중인 모습 (모자 > 의상 > 고양이 순으로 겹침)
-  function equippedImg(type: number): string {
-    const layers: string[] = [];
-    const hat = store.equippedHats[type];
+  // 스프라이트 URL 목록(뒤→앞)을 겹쳐 쌓는 레이어 마크업으로.
+  // 다중 배경 대신 .cat-layer 자식 요소로 겹쳐 어떤 런타임에서도 안전하게 보인다.
+  function spriteLayers(urls: string[]): string {
+    return urls
+      .map((u) => `<i class="cat-layer" style="background-image:url(${u})"></i>`)
+      .join('');
+  }
+
+  // 타입이 현재 장착 중인 모습 (고양이 → 의상 → 모자 순으로 겹침)
+  function equippedLayers(type: number): string {
+    const urls = [catSprite(type)];
     const clothes = store.equippedClothes[type];
-    if (hat !== undefined) layers.push(`url(${costumeSprite(hat)})`);
-    if (clothes !== undefined) layers.push(`url(${costumeSprite(clothes)})`);
-    layers.push(`url(${catSprite(type)})`);
-    return layers.join(', ');
+    const hat = store.equippedHats[type];
+    if (clothes !== undefined) urls.push(costumeSprite(clothes));
+    if (hat !== undefined) urls.push(costumeSprite(hat));
+    return spriteLayers(urls);
   }
 
   function renderTypes() {
@@ -565,7 +572,7 @@ export function showShop(root: HTMLElement, onClose: () => void): void {
     const tiles = Array.from({ length: CAT_SPRITE_COUNT }, (_, type) => {
       return `
         <button class="shop-type-tile" data-type="${type}">
-          <i class="shop-sprite" style="background-image:${equippedImg(type)}"></i>
+          <i class="shop-sprite">${equippedLayers(type)}</i>
         </button>`;
     }).join('');
 
@@ -590,7 +597,7 @@ export function showShop(root: HTMLElement, onClose: () => void): void {
 
       const noneTile = `
         <button class="shop-costume-tile ${equippedIdx === undefined ? 'equipped' : ''}" data-action="default" data-cat="${category}">
-          <i class="shop-sprite" style="background-image:url(${catSprite(type)})"></i>
+          <i class="shop-sprite">${spriteLayers([catSprite(type)])}</i>
           ${equippedIdx === undefined ? `<span class="shop-badge shop-badge-on">${t('shopEquippedLabel')}</span>` : ''}
         </button>`;
 
@@ -605,7 +612,7 @@ export function showShop(root: HTMLElement, onClose: () => void): void {
               : '';
           return `
             <button class="shop-costume-tile ${isEquippedHere ? 'equipped' : ''} ${!owned ? 'locked' : ''}" data-action="costume" data-idx="${idx}">
-              <i class="shop-sprite" style="background-image:url(${costumeSprite(idx)}), url(${catSprite(type)})"></i>
+              <i class="shop-sprite">${spriteLayers([catSprite(type), costumeSprite(idx)])}</i>
               ${!owned ? '<span class="shop-lock">🔒</span>' : ''}
               ${badge}
             </button>`;

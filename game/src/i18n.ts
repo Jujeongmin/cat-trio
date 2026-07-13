@@ -62,6 +62,12 @@ const dict = {
   rankEmptyName: { ko: '닉네임을 입력해 주세요', en: 'Please enter a nickname' },
   rankNameTooLong: { ko: '닉네임은 15자 이하여야 합니다', en: 'Nickname cannot exceed 15 characters' },
   rankSaving: { ko: '저장 중...', en: 'Saving...' },
+
+  shopAria: { ko: '상점', en: 'Shop' },
+  shopTitle: { ko: '🛍️ 코스튬 상점', en: '🛍️ Costume Shop' },
+  shopTypeTitle: { ko: '고양이 {n}', en: 'Cat {n}' },
+  shopEquippedLabel: { ko: '장착중', en: 'Equipped' },
+  shopNotEnoughCoins: { ko: '코인이 부족해요', en: 'Not enough coins' },
 } as const;
 
 type Key = keyof typeof dict;

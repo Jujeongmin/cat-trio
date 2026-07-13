@@ -15,6 +15,8 @@ export interface SaveData {
   bestStars: Record<number, number>; // stageId -> 0..3
   settings: Settings;
   tutorialDone: boolean;
+  ownedCostumes: number[]; // 구매한 코스튬 인덱스 목록 (0~14)
+  equippedCostumes: Record<number, number>; // 고양이 타입(0~11) -> 장착한 코스튬 인덱스
 }
 
 const KEY = 'cat-trio-save-v1';
@@ -26,6 +28,8 @@ const DEFAULT: SaveData = {
   bestStars: {},
   settings: { bgm: true, sfx: true, vibrate: true, lang: 'en' }, // 기본 언어: 영어
   tutorialDone: false,
+  ownedCostumes: [],
+  equippedCostumes: {},
 };
 
 function read(): SaveData {
@@ -38,6 +42,8 @@ function read(): SaveData {
       ...parsed,
       settings: { ...DEFAULT.settings, ...(parsed.settings ?? {}) },
       bestStars: { ...(parsed.bestStars ?? {}) },
+      ownedCostumes: [...(parsed.ownedCostumes ?? [])],
+      equippedCostumes: { ...(parsed.equippedCostumes ?? {}) },
     };
   } catch {
     return structuredClone(DEFAULT);
@@ -63,6 +69,32 @@ export function resetSave(): void {
   } catch {
     /* ignore */
   }
+}
+
+/** 코스튬 구매. 코인 부족·이미 보유 시 false. */
+export function buyCostume(index: number, price: number): boolean {
+  if (store.ownedCostumes.includes(index)) return false;
+  if (store.coins < price) return false;
+  store.coins -= price;
+  store.ownedCostumes.push(index);
+  persist();
+  return true;
+}
+
+/** 코스튬 장착 — 한 코스튬은 한 번에 한 타입에만 입힐 수 있어, 다른 타입에
+ *  이미 장착돼 있었다면 그쪽에서는 자동으로 해제된다. */
+export function equipCostume(catType: number, costumeIndex: number): void {
+  for (const t of Object.keys(store.equippedCostumes)) {
+    if (store.equippedCostumes[+t] === costumeIndex) delete store.equippedCostumes[+t];
+  }
+  store.equippedCostumes[catType] = costumeIndex;
+  persist();
+}
+
+/** 코스튬 해제 — 기본 모습으로 되돌림. */
+export function unequipCostume(catType: number): void {
+  delete store.equippedCostumes[catType];
+  persist();
 }
 
 /** 스테이지 클리어 결과 반영: 해금·코인·최고 별 갱신. 최고 기록 갱신 여부 반환. */

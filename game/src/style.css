@@ -942,6 +942,100 @@ body {
   opacity: 1;
 }
 
+/* ===== 코스튬 상점 ===== */
+.shop-panel {
+  min-width: 300px;
+  max-width: 340px;
+  max-height: 82vh;
+  overflow-y: auto;
+}
+.shop-gallery-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.shop-gallery-head h2 {
+  margin: 0;
+  font-size: 22px;
+  flex: 1;
+  text-align: left;
+}
+.shop-back-btn {
+  font: 700 24px/1 system-ui;
+  flex: none;
+}
+.shop-coin {
+  font-size: 15px;
+  font-weight: 700;
+  color: #c9722e;
+  margin-bottom: 12px;
+}
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.shop-type-tile,
+.shop-costume-tile {
+  position: relative;
+  aspect-ratio: 1;
+  border: 2px solid rgba(107, 79, 42, 0.15);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.55);
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+}
+.shop-costume-tile.equipped {
+  border-color: var(--accent);
+  background: rgba(255, 159, 104, 0.18);
+}
+.shop-costume-tile.locked {
+  opacity: 0.85;
+}
+.shop-sprite {
+  position: absolute;
+  inset: 6%;
+  background-size: 300% 400%;
+  background-position: 50% 0%; /* 정면 정자세 프레임 */
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+.shop-lock {
+  position: absolute;
+  right: 3px;
+  top: 3px;
+  font-size: 12px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4));
+}
+.shop-badge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.6;
+  color: #fff;
+  background: rgba(107, 79, 42, 0.65);
+}
+.shop-badge-on {
+  background: var(--accent);
+}
+.shop-badge-price {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.shop-badge-price .coin-ic {
+  width: 1em;
+  height: 1em;
+}
+
 /* ===== 보상형 광고 재생 오버레이 (SDK 스텁) ===== */
 .ad-overlay {
   position: fixed;

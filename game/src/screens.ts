@@ -1,9 +1,12 @@
-import { store, persist } from './storage';
+import { store, persist, buyCostume, equipCostume, unequipCostume } from './storage';
 import { GameResult } from './types';
 import { bgm } from './audio';
 import { playRewardedAd } from './ads';
 import { t, tf, applyDocumentLang } from './i18n';
 import { connectGameServer } from './server';
+import { catSprite, costumeSprite, CAT_SPRITE_COUNT, COSTUME_COUNT } from './assets';
+
+const SHOP_PRICE = 200; // 코스튬 1개당 가격 (전부 동일)
 
 const FREE_AD_COINS = 30; // 스테이지 선택 화면의 "광고 보고 코인 받기" 보상
 
@@ -42,6 +45,7 @@ export function showStageSelect(
       <div class="select-info">
         <span class="coin"><i class="coin-ic"></i> ${store.coins}</span>
         <button class="lang-toggle-btn" aria-label="Language"></button>
+        <button class="icon-btn shop-btn" style="font-size: 18px;" aria-label="${t('shopAria')}">🛍️</button>
         <button class="icon-btn rank-btn" style="font-size: 18px;" aria-label="Leaderboard">🏆</button>
         <button class="icon-btn settings-btn" aria-label="${t('settingsAria')}">⚙️</button>
       </div>
@@ -141,6 +145,12 @@ export function showStageSelect(
     }
     if (tgt.closest('.rank-btn')) {
       showRanking(root, () => {
+        showStageSelect(root, onPlay, onSettings);
+      });
+      return;
+    }
+    if (tgt.closest('.shop-btn')) {
+      showShop(root, () => {
         showStageSelect(root, onPlay, onSettings);
       });
       return;
@@ -504,4 +514,121 @@ export function showRanking(root: HTMLElement, onClose: () => void): void {
       `;
     }
   });
+}
+
+/** 코스튬 상점 — 타입(고양이 종류) 중심: 12개 타입 스와치 → 선택한 타입에 입힐
+ *  코스튬 갤러리(구매/장착/해제). 한 코스튬은 한 번에 한 타입에만 장착 가능. */
+export function showShop(root: HTMLElement, onClose: () => void): void {
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.innerHTML = `<div class="panel shop-panel"></div>`;
+  root.appendChild(overlay);
+  const panel = overlay.querySelector<HTMLDivElement>('.shop-panel')!;
+
+  let currentType: number | null = null;
+
+  function renderTypes() {
+    currentType = null;
+    const tiles = Array.from({ length: CAT_SPRITE_COUNT }, (_, type) => {
+      const costumeIdx = store.equippedCostumes[type];
+      const url = costumeIdx !== undefined ? costumeSprite(costumeIdx) : catSprite(type);
+      return `
+        <button class="shop-type-tile" data-type="${type}">
+          <i class="shop-sprite" style="background-image:url(${url})"></i>
+        </button>`;
+    }).join('');
+
+    panel.innerHTML = `
+      <h2>${t('shopTitle')}</h2>
+      <div class="shop-coin"><i class="coin-ic"></i> ${store.coins}</div>
+      <div class="shop-grid shop-types">${tiles}</div>
+      <div class="btns"><button class="primary" data-close>${t('closeBtn')}</button></div>
+    `;
+  }
+
+  function renderGallery(type: number) {
+    currentType = type;
+    const equippedIdx = store.equippedCostumes[type];
+
+    const defaultTile = `
+      <button class="shop-costume-tile ${equippedIdx === undefined ? 'equipped' : ''}" data-action="default">
+        <i class="shop-sprite" style="background-image:url(${catSprite(type)})"></i>
+        ${equippedIdx === undefined ? `<span class="shop-badge shop-badge-on">${t('shopEquippedLabel')}</span>` : ''}
+      </button>`;
+
+    const costumeTiles = Array.from({ length: COSTUME_COUNT }, (_, idx) => {
+      const owned = store.ownedCostumes.includes(idx);
+      const isEquippedHere = equippedIdx === idx;
+      const badge = isEquippedHere
+        ? `<span class="shop-badge shop-badge-on">${t('shopEquippedLabel')}</span>`
+        : !owned
+          ? `<span class="shop-badge shop-badge-price"><i class="coin-ic"></i>${SHOP_PRICE}</span>`
+          : '';
+      return `
+        <button class="shop-costume-tile ${isEquippedHere ? 'equipped' : ''} ${!owned ? 'locked' : ''}" data-action="costume" data-idx="${idx}">
+          <i class="shop-sprite" style="background-image:url(${costumeSprite(idx)})"></i>
+          ${!owned ? '<span class="shop-lock">🔒</span>' : ''}
+          ${badge}
+        </button>`;
+    }).join('');
+
+    panel.innerHTML = `
+      <div class="shop-gallery-head">
+        <button class="icon-btn shop-back-btn" aria-label="${t('backAria')}">‹</button>
+        <h2>${tf('shopTypeTitle', { n: type + 1 })}</h2>
+      </div>
+      <div class="shop-coin"><i class="coin-ic"></i> ${store.coins}</div>
+      <div class="shop-grid shop-costumes">${defaultTile}${costumeTiles}</div>
+      <div class="btns"><button class="primary" data-close>${t('closeBtn')}</button></div>
+    `;
+  }
+
+  overlay.addEventListener('click', (e) => {
+    const tgt = e.target as HTMLElement;
+    if (tgt.closest('[data-close]')) {
+      overlay.remove();
+      onClose();
+      return;
+    }
+    if (tgt.closest('.shop-back-btn')) {
+      renderTypes();
+      return;
+    }
+    const typeTile = tgt.closest('.shop-type-tile') as HTMLElement | null;
+    if (typeTile) {
+      renderGallery(Number(typeTile.dataset.type));
+      return;
+    }
+    const costumeTile = tgt.closest('.shop-costume-tile') as HTMLElement | null;
+    if (costumeTile && currentType !== null) {
+      const type = currentType;
+      if (costumeTile.dataset.action === 'default') {
+        unequipCostume(type);
+        renderGallery(type);
+        return;
+      }
+      const idx = Number(costumeTile.dataset.idx);
+      const owned = store.ownedCostumes.includes(idx);
+      const isEquippedHere = store.equippedCostumes[type] === idx;
+      if (isEquippedHere) {
+        unequipCostume(type);
+        renderGallery(type);
+        return;
+      }
+      if (!owned) {
+        if (store.coins < SHOP_PRICE) {
+          alert(t('shopNotEnoughCoins'));
+          return;
+        }
+        buyCostume(idx, SHOP_PRICE);
+        equipCostume(type, idx);
+        renderGallery(type);
+        return;
+      }
+      equipCostume(type, idx);
+      renderGallery(type);
+    }
+  });
+
+  renderTypes();
 }

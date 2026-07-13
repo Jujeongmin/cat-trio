@@ -1,5 +1,5 @@
 import { CatPlacement, StageData, GameResult } from './types';
-import { catSprite } from './assets';
+import { catSprite, costumeSprite } from './assets';
 import { cellKey, reachableEmpty, isEscapable } from './escape';
 import { store, persist } from './storage';
 import { haptics } from './haptics';
@@ -335,11 +335,17 @@ export class Game {
     for (const c of this.cats) this.makeCatEl(c);
   }
 
+  // 해당 타입에 장착된 코스튬이 있으면 그걸, 없으면 기본 스프라이트를 반환
+  private spriteFor(type: number): string {
+    const costumeIndex = store.equippedCostumes[type];
+    return costumeIndex !== undefined ? costumeSprite(costumeIndex) : catSprite(type);
+  }
+
   private makeCatEl(cat: { id: string; type: number; col: number; row: number }) {
     const el = document.createElement('div');
     el.className = 'cat';
     el.dataset.id = cat.id;
-    el.style.setProperty('--sheet', `url(${catSprite(cat.type)})`);
+    el.style.setProperty('--sheet', `url(${this.spriteFor(cat.type)})`);
     el.style.width = `${CELL}px`;
     el.style.height = `${CELL}px`;
     el.style.zIndex = '5';
@@ -658,7 +664,7 @@ export class Game {
     present.forEach((c, i) => {
       c.type = types[i];
       const el = this.els.get(c.id)!;
-      el.style.setProperty('--sheet', `url(${catSprite(c.type)})`);
+      el.style.setProperty('--sheet', `url(${this.spriteFor(c.type)})`);
       el.classList.add('shuffle-pulse');
       el.addEventListener('animationend', () => el.classList.remove('shuffle-pulse'), {
         once: true,

@@ -66,24 +66,46 @@ function openSettings() {
 }
 
 applyDocumentLang();
+// 진입: 스테이지 선택 화면 (로컬 캐시로 먼저 끊김없이 시작)
+toSelect();
+
 // 게임 부팅 시 백그라운드에서 실시간 서버 연결을 시작합니다.
 void connectGameServer().then(async (server) => {
   if (server.connected) {
     try {
-      // 서버에서 해당 지갑 계정의 전용 클라우드 저장 데이터를 로드합니다.
       const cloudSave = await server.remoteFunction('loadGameData');
       if (cloudSave) {
-        // 클라우드 저장 데이터를 로컬 스토어에 덮어써서 동기화합니다.
-        Object.assign(store, cloudSave);
-        // 동기화된 상태를 로컬 저장소(localStorage)에도 즉시 동기화 보관합니다.
+        // 중요: 클라우드와 로컬 중 더 높은 진행도를 우선 병합합니다.
+        // 단순 Object.assign 으로 덮어쓰면 장착한 코스튬이 날아가고
+        // 고양이 종류가 초기화되는 버그가 발생합니다.
+        const merged: any = {};
+        // 숫자 값은 더 높은 쪽을 살립니다 (스테이지, 코인 등)
+        for (const key of ['highStage', 'currentStage', 'coins']) {
+          merged[key] = Math.max((store as any)[key] ?? 0, cloudSave[key] ?? 0);
+        }
+        // 객체/배열은 로컬 값이 있으면 로컬을 우선, 없으면 클라우드 사용
+        for (const key of ['bestStars', 'settings']) {
+          merged[key] = { ...(cloudSave[key] ?? {}), ...(store as any)[key] };
+        }
+        // 코스튬 관련 데이터: 로컬 값이 절대 우선 (클라우드가 오래된 빈 객체면 덮어쓰지 않음)
+        for (const key of ['ownedCostumes', 'equippedClothes', 'equippedHats']) {
+          const localVal = (store as any)[key];
+          if (localVal && (Array.isArray(localVal) ? localVal.length > 0 : Object.keys(localVal).length > 0)) {
+            merged[key] = localVal;
+          } else {
+            merged[key] = cloudSave[key] ?? localVal;
+          }
+        }
+        // 기타 필드는 그대로 유지
+        for (const key of ['tutorialDone']) {
+          merged[key] = (store as any)[key] ?? cloudSave[key];
+        }
+
+        Object.assign(store, merged);
         localStorage.setItem('cat-trio-save-v1', JSON.stringify(store));
-        // 동기화 완료 후 최신 진행 상황(해금 스테이지, 코인 등)을 화면에 즉각 갱신 반영합니다.
-        toSelect();
       }
     } catch (e) {
       console.warn('Failed to sync cloud save data on boot', e);
     }
   }
 });
-// 진입: 스테이지 선택 화면 (로컬 캐시로 먼저 끊김없이 시작)
-toSelect();

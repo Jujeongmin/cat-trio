@@ -232,6 +232,7 @@ body {
 /* 고양이 — 컨테이너. 스프라이트/착용물은 각 .cat-layer 자식에 그린다. */
 .cat {
   position: absolute;
+  overflow: visible; /* 자식 레이어가 잘리지 않도록 보장 (런타임 렌더링 안정화) */
   cursor: pointer;
   transition:
     left 0.34s cubic-bezier(0.34, 1.1, 0.64, 1),

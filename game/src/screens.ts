@@ -15,7 +15,7 @@ import {
 
 const SHOP_PRICE = 1000; // 코스튬 1개당 가격 (전부 동일)
 
-const FREE_AD_COINS = 30; // 스테이지 선택 화면의 "광고 보고 코인 받기" 보상
+const FREE_AD_COINS = 300; // 스테이지 선택 화면의 "광고 보고 코인 받기" 보상
 
 // 최고 해금 스테이지 이후로 미리 보여줄 잠금 타일 수
 const LOOKAHEAD = 6;

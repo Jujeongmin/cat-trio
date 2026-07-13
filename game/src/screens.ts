@@ -60,6 +60,7 @@ export function showStageSelect(
     </div>
   `;
 
+  const titleEl = screen.querySelector<HTMLHeadingElement>('.select-top h1')!;
   const coinLabel = screen.querySelector('.coin')!;
   const adBtn = screen.querySelector<HTMLButtonElement>('.ad-free-btn')!;
   const langBtn = screen.querySelector<HTMLButtonElement>('.lang-toggle-btn')!;
@@ -109,6 +110,7 @@ export function showStageSelect(
 
   // 언어 전환 시 화면에 보이는 모든 텍스트를 즉시 다시 그린다
   function applyLang() {
+    titleEl.textContent = t('gameTitle');
     langBtn.textContent = store.settings.lang === 'ko' ? 'EN' : 'KO';
     settingsBtn.setAttribute('aria-label', t('settingsAria'));
     prevBtn.setAttribute('aria-label', t('prevStageAria'));

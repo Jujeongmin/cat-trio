@@ -47,12 +47,11 @@ export function showStageSelect(
   let cur = clampStage(store.currentStage || 1);
 
   screen.innerHTML = `
-    <header class="select-top">
-      <h1>${t('gameTitle')}</h1>
-      <div class="select-info">
+    <header class="select-top" style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 12px; width: 100%;">
+      <h1 style="margin: 0; font-size: 32px; font-weight: 900; text-align: center; letter-spacing: -0.02em;">${t('gameTitle')}</h1>
+      <div class="select-info" style="display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%;">
         <span class="coin"><i class="coin-ic"></i> ${store.coins}</span>
         <button class="lang-toggle-btn" aria-label="Language"></button>
-        <button class="icon-btn shop-btn" style="font-size: 18px;" aria-label="${t('shopAria')}">🛍️</button>
         <button class="icon-btn rank-btn" style="font-size: 18px;" aria-label="Leaderboard">🏆</button>
         <button class="icon-btn settings-btn" aria-label="${t('settingsAria')}">⚙️</button>
       </div>

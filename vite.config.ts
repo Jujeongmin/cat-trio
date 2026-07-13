@@ -1,4 +1,6 @@
 import { defineConfig } from 'vite';
+import { copyFileSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 // Verse8(Agent8)는 Vite 프로젝트를 그대로 빌드/배포한다.
 // 요구사항: index.html 을 game/ 폴더 안에 둔다 → Vite 의 `root` 를 game 으로 지정.
@@ -22,4 +24,20 @@ export default defineConfig({
     host: true,
     port: Number(process.env.PORT) || 5173,
   },
+
+  plugins: [
+    {
+      name: 'copy-server-dist',
+      writeBundle() {
+        const serverSrc = resolve(__dirname, 'server/dist/server.js');
+        const serverDest = resolve(__dirname, 'dist/server.js');
+        if (existsSync(serverSrc)) {
+          copyFileSync(serverSrc, serverDest);
+          console.log('✅ Copied server/dist/server.js → dist/server.js');
+        } else {
+          console.warn('⚠️  server/dist/server.js not found. Skipping server copy. Run npx -y @agent8/gameserver-node build first.');
+        }
+      },
+    },
+  ],
 });

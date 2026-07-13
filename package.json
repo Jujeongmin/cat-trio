@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build:server": "bunx @agent8/gameserver-node build",
+    "build": "bunx @agent8/gameserver-node build && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },

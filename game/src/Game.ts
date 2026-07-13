@@ -521,7 +521,10 @@ export class Game {
     try {
       cat.present = false;
       this.occupied.delete(cellKey(cat.col, cat.row));
-      this.slots.push({ id: cat.id, type: cat.type });
+      // 같은 종류가 이미 슬롯에 있으면 그 뒤에 끼워 넣어 종류별로 모이게 한다
+      const lastSame = this.slots.map((s) => s.type).lastIndexOf(cat.type);
+      if (lastSame !== -1) this.slots.splice(lastSame + 1, 0, { id: cat.id, type: cat.type });
+      else this.slots.push({ id: cat.id, type: cat.type });
       this.history.push(cat.id);
 
       const el = this.els.get(cat.id)!;

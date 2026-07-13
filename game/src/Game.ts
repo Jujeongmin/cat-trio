@@ -61,6 +61,7 @@ export class Game {
   private history: string[] = []; // 슬롯에 넣은 순서(아직 매치 안 된 것만 유지) — 되돌리기용
 
   private capacity = 7;
+  private slotPlusUsed = false; // 슬롯+1은 스테이지당 1회만
   private over = false;
   private inFlight = 0; // 진행 중인 select() 애니메이션 수 — 아이템 버튼 잠금용
 
@@ -659,7 +660,11 @@ export class Game {
     const presentCount = this.remaining();
     shuffleBtn.disabled = blocked || store.coins < ITEM_COST.shuffle || presentCount < 2;
     undoBtn.disabled = blocked || store.coins < ITEM_COST.undo || !this.canUndo();
-    slotBtn.disabled = blocked || store.coins < ITEM_COST.slotPlus || this.capacity >= MAX_CAPACITY;
+    slotBtn.disabled =
+      blocked ||
+      store.coins < ITEM_COST.slotPlus ||
+      this.capacity >= MAX_CAPACITY ||
+      this.slotPlusUsed;
   }
 
   // 셔플 — 보드 위 살아있는 고양이들의 "종류"를 서로 뒤섞는다.
@@ -719,13 +724,15 @@ export class Game {
     this.updateItemBar();
   }
 
-  // 슬롯+1 — 이번 스테이지에서 슬롯 칸을 1개 늘린다.
+  // 슬롯+1 — 이번 스테이지에서 슬롯 칸을 1개 늘린다. (스테이지당 1회)
   private useSlotPlus() {
     if (this.over || this.inFlight > 0) return;
-    if (this.capacity >= MAX_CAPACITY || store.coins < ITEM_COST.slotPlus) return;
+    if (this.slotPlusUsed || this.capacity >= MAX_CAPACITY || store.coins < ITEM_COST.slotPlus)
+      return;
     store.coins -= ITEM_COST.slotPlus;
     persist();
 
+    this.slotPlusUsed = true;
     this.capacity++;
     this.renderSlotBar();
     this.repositionSlots();

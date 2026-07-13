@@ -53,4 +53,19 @@ describe('Server Leaderboard', () => {
     expect(top[1].nickname).toBe('BobTheCat');
     expect(top[1].bestStage).toBe(3);
   });
+
+  test('saveGameData and loadGameData store and retrieve full save progress', async (server) => {
+    server.connect({ account: 'user-charlie' });
+    const fakeSave = {
+      highStage: 3,
+      coins: 150,
+      bestStars: { 1: 3, 2: 2 },
+    };
+    
+    await server.saveGameData(fakeSave);
+    const loaded = await server.loadGameData();
+    expect(loaded).toBeTruthy();
+    expect(loaded.highStage).toBe(3);
+    expect(loaded.coins).toBe(150);
+  });
 });

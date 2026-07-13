@@ -96,4 +96,22 @@ export class Server {
       rank: higherRankCount + 1,
     };
   }
+
+  /**
+   * Saves the player's full progress (coins, levels, stars) securely on the server.
+   */
+  async saveGameData(data: any): Promise<void> {
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid save data');
+    }
+    await $global.updateMyState({ gameSave: data });
+  }
+
+  /**
+   * Loads the player's full progress from the server.
+   */
+  async loadGameData(): Promise<any> {
+    const state = await $global.getMyState();
+    return state?.gameSave || null;
+  }
 }

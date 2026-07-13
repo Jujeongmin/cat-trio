@@ -1,7 +1,7 @@
 // 저장 시스템 (localStorage) — 명세 11
 // 현재/최고 스테이지, 코인, 스테이지별 최고 별, 설정, 튜토리얼 완료 여부
-
 import { costumeCategory } from './assets';
+import { getGameServer } from './server';
 
 export interface Settings {
   bgm: boolean;
@@ -61,6 +61,10 @@ export const store: SaveData = read();
 export function persist(): void {
   try {
     localStorage.setItem(KEY, JSON.stringify(store));
+    const s = getGameServer();
+    if (s.connected) {
+      void s.remoteFunction('saveGameData', [store]);
+    }
   } catch {
     /* 저장 실패는 조용히 무시 */
   }

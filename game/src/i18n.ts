@@ -68,6 +68,8 @@ const dict = {
   shopTypeTitle: { ko: '고양이 {n}', en: 'Cat {n}' },
   shopEquippedLabel: { ko: '장착중', en: 'Equipped' },
   shopNotEnoughCoins: { ko: '코인이 부족해요', en: 'Not enough coins' },
+  shopClothesLabel: { ko: '👕 의상', en: '👕 Outfits' },
+  shopHatsLabel: { ko: '🎩 모자', en: '🎩 Hats' },
 } as const;
 
 type Key = keyof typeof dict;

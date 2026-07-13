@@ -1,6 +1,8 @@
 // 저장 시스템 (localStorage) — 명세 11
 // 현재/최고 스테이지, 코인, 스테이지별 최고 별, 설정, 튜토리얼 완료 여부
 
+import { costumeCategory } from './assets';
+
 export interface Settings {
   bgm: boolean;
   sfx: boolean;
@@ -15,8 +17,9 @@ export interface SaveData {
   bestStars: Record<number, number>; // stageId -> 0..3
   settings: Settings;
   tutorialDone: boolean;
-  ownedCostumes: number[]; // 구매한 코스튬 인덱스 목록 (0~14)
-  equippedCostumes: Record<number, number>; // 고양이 타입(0~11) -> 장착한 코스튬 인덱스
+  ownedCostumes: number[]; // 구매한 코스튬 인덱스 목록 (0~13)
+  equippedClothes: Record<number, number>; // 고양이 타입(0~11) -> 의상(0~5)
+  equippedHats: Record<number, number>; // 고양이 타입(0~11) -> 모자(6~13)
 }
 
 const KEY = 'cat-trio-save-v1';
@@ -29,7 +32,8 @@ const DEFAULT: SaveData = {
   settings: { bgm: true, sfx: true, vibrate: true, lang: 'en' }, // 기본 언어: 영어
   tutorialDone: false,
   ownedCostumes: [],
-  equippedCostumes: {},
+  equippedClothes: {},
+  equippedHats: {},
 };
 
 function read(): SaveData {
@@ -43,7 +47,8 @@ function read(): SaveData {
       settings: { ...DEFAULT.settings, ...(parsed.settings ?? {}) },
       bestStars: { ...(parsed.bestStars ?? {}) },
       ownedCostumes: [...(parsed.ownedCostumes ?? [])],
-      equippedCostumes: { ...(parsed.equippedCostumes ?? {}) },
+      equippedClothes: { ...(parsed.equippedClothes ?? {}) },
+      equippedHats: { ...(parsed.equippedHats ?? {}) },
     };
   } catch {
     return structuredClone(DEFAULT);
@@ -81,19 +86,27 @@ export function buyCostume(index: number, price: number): boolean {
   return true;
 }
 
-/** 코스튬 장착 — 한 코스튬은 한 번에 한 타입에만 입힐 수 있어, 다른 타입에
- *  이미 장착돼 있었다면 그쪽에서는 자동으로 해제된다. */
+/** 카테고리(의상/모자)에 맞는 장착 레코드를 반환. */
+function slotFor(costumeIndex: number): Record<number, number> {
+  return costumeCategory(costumeIndex) === 'clothes' ? store.equippedClothes : store.equippedHats;
+}
+
+/** 코스튬 장착 — 의상/모자는 별도 슬롯이라 동시 착용 가능. 같은 아이템은
+ *  한 번에 한 타입에만 입힐 수 있어, 다른 타입에 이미 장착돼 있었다면
+ *  그쪽에서는 자동으로 해제된다. */
 export function equipCostume(catType: number, costumeIndex: number): void {
-  for (const t of Object.keys(store.equippedCostumes)) {
-    if (store.equippedCostumes[+t] === costumeIndex) delete store.equippedCostumes[+t];
+  const slot = slotFor(costumeIndex);
+  for (const t of Object.keys(slot)) {
+    if (slot[+t] === costumeIndex) delete slot[+t];
   }
-  store.equippedCostumes[catType] = costumeIndex;
+  slot[catType] = costumeIndex;
   persist();
 }
 
-/** 코스튬 해제 — 기본 모습으로 되돌림. */
-export function unequipCostume(catType: number): void {
-  delete store.equippedCostumes[catType];
+/** 해당 카테고리 착용물 해제 — 기본 모습으로 되돌림. */
+export function unequipCostume(catType: number, category: 'clothes' | 'hat'): void {
+  const slot = category === 'clothes' ? store.equippedClothes : store.equippedHats;
+  delete slot[catType];
   persist();
 }
 

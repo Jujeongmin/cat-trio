@@ -335,17 +335,23 @@ export class Game {
     for (const c of this.cats) this.makeCatEl(c);
   }
 
-  // 해당 타입에 장착된 코스튬이 있으면 그걸, 없으면 기본 스프라이트를 반환
+  // background-image 값. 착용물을 기본 스프라이트 위에 겹친다 — 모자 > 의상 > 고양이 순.
+  // (다중 배경 — 시트 포맷이 같아 프레임 위치/애니메이션이 모든 겹에 함께 적용됨)
   private spriteFor(type: number): string {
-    const costumeIndex = store.equippedCostumes[type];
-    return costumeIndex !== undefined ? costumeSprite(costumeIndex) : catSprite(type);
+    const layers: string[] = [];
+    const hat = store.equippedHats[type];
+    const clothes = store.equippedClothes[type];
+    if (hat !== undefined) layers.push(`url(${costumeSprite(hat)})`);
+    if (clothes !== undefined) layers.push(`url(${costumeSprite(clothes)})`);
+    layers.push(`url(${catSprite(type)})`);
+    return layers.join(', ');
   }
 
   private makeCatEl(cat: { id: string; type: number; col: number; row: number }) {
     const el = document.createElement('div');
     el.className = 'cat';
     el.dataset.id = cat.id;
-    el.style.setProperty('--sheet', `url(${this.spriteFor(cat.type)})`);
+    el.style.setProperty('--sheet', this.spriteFor(cat.type));
     el.style.width = `${CELL}px`;
     el.style.height = `${CELL}px`;
     el.style.zIndex = '5';
@@ -667,7 +673,7 @@ export class Game {
     present.forEach((c, i) => {
       c.type = types[i];
       const el = this.els.get(c.id)!;
-      el.style.setProperty('--sheet', `url(${this.spriteFor(c.type)})`);
+      el.style.setProperty('--sheet', this.spriteFor(c.type));
       el.classList.add('shuffle-pulse');
       el.addEventListener('animationend', () => el.classList.remove('shuffle-pulse'), {
         once: true,

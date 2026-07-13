@@ -13,7 +13,7 @@ import {
   COSTUME_COUNT,
 } from './assets';
 
-const SHOP_PRICE = 200; // 코스튬 1개당 가격 (전부 동일)
+const SHOP_PRICE = 300; // 코스튬 1개당 가격 (전부 동일)
 
 const FREE_AD_COINS = 30; // 스테이지 선택 화면의 "광고 보고 코인 받기" 보상
 

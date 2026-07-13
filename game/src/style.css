@@ -945,15 +945,26 @@ body {
 /* ===== 코스튬 상점 ===== */
 .shop-panel {
   min-width: 300px;
-  max-width: 340px;
-  max-height: 82vh;
+  max-width: 360px;
+  max-height: 92vh;
   overflow-y: auto;
+  /* 스크롤이 생겨도 스크롤바는 보이지 않게 */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 18px 20px;
+}
+.shop-panel::-webkit-scrollbar {
+  display: none;
+}
+.shop-panel h2 {
+  font-size: 22px;
+  margin-bottom: 4px;
 }
 .shop-gallery-head {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 .shop-gallery-head h2 {
   margin: 0;
@@ -964,24 +975,30 @@ body {
 .shop-back-btn {
   font: 700 24px/1 system-ui;
   flex: none;
+  width: 36px;
+  height: 36px;
 }
 .shop-coin {
   font-size: 15px;
   font-weight: 700;
   color: #c9722e;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 .shop-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-bottom: 18px;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+/* 착용물 갤러리는 5열로 촘촘하게 — 의상(7칸)/모자(9칸) 각각 2줄에 들어간다 */
+.shop-grid.shop-costumes {
+  grid-template-columns: repeat(5, 1fr);
 }
 .shop-section-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
   text-align: left;
-  margin: 2px 0 8px;
+  margin: 2px 0 6px;
 }
 .shop-type-tile,
 .shop-costume-tile {

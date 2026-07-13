@@ -233,7 +233,9 @@ export class Game {
   };
 
   private fitScale = () => {
-    const s = Math.min(window.innerWidth / VW, window.innerHeight / VH);
+    const parentWidth = this.root.clientWidth || window.innerWidth;
+    const parentHeight = this.root.clientHeight || window.innerHeight;
+    const s = Math.min(parentWidth / VW, parentHeight / VH);
     this.wrap.style.transform = `translate(-50%, -50%) scale(${s})`;
   };
 

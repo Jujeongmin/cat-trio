@@ -1,7 +1,7 @@
 import { store, persist, buyCostume, equipCostume, unequipCostume } from './storage';
 import { GameResult } from './types';
 import { bgm } from './audio';
-import { playRewardedAd } from './ads';
+import { claimRewardedAd } from './ads';
 import { t, tf, applyDocumentLang } from './i18n';
 import { connectGameServer } from './server';
 import {
@@ -174,10 +174,11 @@ export function showStageSelect(
     if (tgt.closest('.ad-free-btn')) {
       if (adBtn.disabled) return;
       adBtn.disabled = true;
-      void playRewardedAd(root, 'free-coins').then((res) => {
+      // 광고 재생 + 서버 검증 후 검증된 금액만 지급
+      void claimRewardedAd(root, 'free-coins', FREE_AD_COINS).then((amount) => {
         adBtn.disabled = false;
-        if (res !== 'rewarded') return;
-        store.coins += FREE_AD_COINS;
+        if (amount <= 0) return;
+        store.coins += amount;
         persist();
         coinLabel.innerHTML = `<i class="coin-ic"></i> ${store.coins}`;
       });
@@ -260,15 +261,16 @@ export function showResult(
     if (adBtn) {
       if (adBtn.disabled) return;
       adBtn.disabled = true;
-      void playRewardedAd(root, 'double-stage-coins').then((res) => {
-        if (res !== 'rewarded') {
+      // 변동 보상(스테이지 코인 2배): 서버는 검증만, 금액은 result.coins 사용
+      void claimRewardedAd(root, 'double-stage-coins', result.coins).then((amount) => {
+        if (amount <= 0) {
           adBtn.disabled = false;
           return;
         }
-        store.coins += result.coins; // 이번 스테이지 보상만큼 한 번 더 지급 = 2배
+        store.coins += amount; // 이번 스테이지 보상만큼 한 번 더 지급 = 2배
         persist();
         const coinEl = overlay.querySelector('.coin-earned')!;
-        coinEl.textContent = `+${result.coins * 2}`;
+        coinEl.textContent = `+${result.coins + amount}`;
         adBtn.textContent = t('adDoubleClaimed');
         adBtn.classList.add('claimed');
       });

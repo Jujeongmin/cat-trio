@@ -1,5 +1,6 @@
 import { Verse8Ads } from '@verse8/ads';
 import { t, tf } from './i18n';
+import { getGameServer } from './server';
 
 // 보상형 광고 SDK 어댑터 (Verse8 공식 @verse8/ads 패키지)
 //
@@ -79,11 +80,17 @@ function showAdSimulated(container: HTMLElement): Promise<AdResult> {
 
 // ---- 공용 함수 ----
 
+export interface RewardedAdOutcome {
+  status: AdResult;
+  // 실제 SDK 광고의 서버 검증용 ID. DEV 시뮬레이션에는 없다(undefined).
+  requestId?: string;
+}
+
 /** 보상형 광고 재생. placementId 에 따라 적절한 보상형 광고를 요청합니다. */
 export async function playRewardedAd(
   container: HTMLElement,
   placementId: string = 'default',
-): Promise<AdResult> {
+): Promise<RewardedAdOutcome> {
   ensureInit();
 
   try {
@@ -91,22 +98,22 @@ export async function playRewardedAd(
 
     switch (result.status) {
       case 'rewarded':
-        return 'rewarded';
+        return { status: 'rewarded', requestId: result.requestId };
       case 'dismissed':
-        return 'skipped';
+        return { status: 'skipped' };
       case 'failed':
         if (result.error.code === 'unsupported_env') {
           // 프로덕션에서는 unsupported_env 를 그대로 failed 처리.
           // 개발 환경에서만 시뮬레이션으로 폴백
           if (import.meta.env.DEV) {
             const loaded = await loadAdSimulated();
-            if (!loaded) return 'failed';
-            return showAdSimulated(container);
+            if (!loaded) return { status: 'failed' };
+            return { status: await showAdSimulated(container) };
           }
         }
-        return 'failed';
+        return { status: 'failed' };
       default:
-        return 'failed';
+        return { status: 'failed' };
     }
   } catch {
     // SDK 호출 자체 예외 (네트워크, 타임아웃 등)
@@ -114,9 +121,41 @@ export async function playRewardedAd(
     // 프로덕션: 실패 처리 — 가짜 광고를 절대 보여주지 않음
     if (import.meta.env.DEV) {
       const loaded = await loadAdSimulated();
-      if (!loaded) return 'failed';
-      return showAdSimulated(container);
+      if (!loaded) return { status: 'failed' };
+      return { status: await showAdSimulated(container) };
     }
-    return 'failed';
+    return { status: 'failed' };
   }
+}
+
+/**
+ * 광고 재생 + 서버측 검증까지 수행하고, 실제로 지급할 코인 수를 돌려준다(0 = 지급 안 함).
+ *
+ * - 실제 광고 + 서버 연결됨: 서버가 Verse8 광고 검증서버로 확인 후 verified 일 때만 승인.
+ *   고정 보상(예: free-coins)은 서버 REWARD_TABLE 금액을, 변동 보상(스테이지 2배 등)은
+ *   서버가 0을 돌려주므로 clientAmount 를 사용한다. 재생(중복) 방지도 서버가 담당.
+ * - DEV 시뮬레이션 또는 서버 미연결: 검증 불가라 clientAmount 로 폴백 지급.
+ *   (게임 코인은 원래 클라이언트 권한 — 서버 검증은 '광고 실제 시청' 게이트를 강화)
+ */
+export async function claimRewardedAd(
+  container: HTMLElement,
+  placementId: string,
+  clientAmount: number,
+): Promise<number> {
+  const { status, requestId } = await playRewardedAd(container, placementId);
+  if (status !== 'rewarded') return 0;
+
+  const server = getGameServer();
+  if (requestId && server.connected) {
+    try {
+      const v = await server.remoteFunction('redeemAdReward', [requestId, placementId]);
+      if (!v?.granted) return 0; // 미검증 / 이미 지급됨 등 → 지급 안 함
+      return v.amount > 0 ? v.amount : clientAmount;
+    } catch {
+      return 0; // 검증 실패 시 안전하게 미지급
+    }
+  }
+
+  // DEV 시뮬레이션 또는 서버 미연결 폴백
+  return clientAmount;
 }

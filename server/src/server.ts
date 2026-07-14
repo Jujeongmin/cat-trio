@@ -2,9 +2,78 @@
  * Agent8 GameServer - Cat Trio Leaderboard and Data Persistence
  */
 
+// 보상형 광고 지급 금액(서버 권위) — placementId 별 고정 보상.
+// 0 은 "검증만 하고 금액은 클라이언트가 계산하는 변동 보상"을 뜻한다(예: 스테이지 2배).
+// free-coins 는 클라이언트 FREE_AD_COINS 와 값을 맞춰 유지한다.
+const AD_REWARD_TABLE: Record<string, number> = {
+  'free-coins': 300,
+  'double-stage-coins': 0,
+};
+
 export class Server {
   async ping(): Promise<string> {
     return 'pong';
+  }
+
+  /**
+   * 보상형 광고 검증 후 보상 승인. (docs: /docs/ads/server-verification)
+   * - Verse8 광고 검증서버에 requestId 상태를 조회해 verified 일 때만 승인.
+   * - (account, requestId) 중복 지급(재생 공격) 방지.
+   * - 반환: { granted, amount }. amount 0 은 변동 보상(클라 금액 사용).
+   */
+  async redeemAdReward(
+    requestId: string,
+    placementId: string,
+  ): Promise<{ granted: boolean; amount: number; reason?: string }> {
+    if (typeof requestId !== 'string' || !requestId) {
+      throw new Error('Invalid requestId');
+    }
+    if (!(placementId in AD_REWARD_TABLE)) {
+      return { granted: false, amount: 0, reason: 'unknown_placement' };
+    }
+
+    // 재생 방지: 같은 (account, requestId) 가 이미 지급됐으면 거부
+    const existing = await $global.getCollectionItems('ad_redemptions', {
+      filters: [
+        { field: 'account', operator: '==', value: $sender.account },
+        { field: 'requestId', operator: '==', value: requestId },
+      ],
+    });
+    if (existing.length > 0) {
+      return { granted: false, amount: 0, reason: 'already_redeemed' };
+    }
+
+    // Verse8 광고 검증서버 조회 (pending 이면 짧게 재시도)
+    // fetch/setTimeout 은 런타임 전역을 사용 (server tsconfig lib 에 DOM/Node 타입이 없어 캐스팅)
+    const g = globalThis as any;
+    let status = 'failed';
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await g.fetch(
+          `https://ads-verifier.verse8.io/ads/status?requestId=${encodeURIComponent(requestId)}`,
+        );
+        const body = await res.json();
+        status = body?.status ?? 'failed';
+      } catch {
+        return { granted: false, amount: 0, reason: 'verify_error' };
+      }
+      if (status !== 'pending') break;
+      await new Promise<void>((resolve) => g.setTimeout(resolve, 1000));
+    }
+
+    if (status !== 'verified') {
+      // dismissed / failed / pending → 지급 안 함
+      return { granted: false, amount: 0, reason: status };
+    }
+
+    // 검증 성공 → 재생방지 기록 후 서버측 보상 금액 반환
+    await $global.addCollectionItem('ad_redemptions', {
+      account: $sender.account,
+      requestId,
+      placementId,
+      createdAt: Date.now(),
+    });
+    return { granted: true, amount: AD_REWARD_TABLE[placementId] };
   }
 
   async getMyAccount(): Promise<string> {

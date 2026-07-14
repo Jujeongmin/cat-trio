@@ -36,8 +36,8 @@ body {
   position: relative;
   height: 95vh; /* 화면 세로 길이에 맞춰 유연하게 높이 최대화 */
   aspect-ratio: 445 / 704; /* 게임 보드(480x760) 비율과 완벽하게 일치시켜 PC 상하 여백 제거 */
-  max-width: 445px; /* 최대 가로폭 445px 제약 */
-  max-height: 704px; /* 가로 445px일 때 비례하는 완벽한 세로 길이 제한 */
+  max-width: 400px; /* 데스크톱 프레임 최대 가로폭 (RandomDefense 처럼 더 컴팩트하게) */
+  max-height: 633px; /* 400px 폭에 비례하는 세로 상한 (400 × 704/445) */
   overflow: hidden;
   background: transparent; /* 전체 그라데이션 자연스럽게 융합 */
   container-type: inline-size; /* 100% 비례하는 반응형 글자/버튼 크기용 컨테이너 쿼리 지원 활성화 */

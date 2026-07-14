@@ -245,11 +245,21 @@ export class Game {
   };
 
   // ---- 스프라이트 프레임 --------------------------------------------------
-  // 프레임 위치는 CSS 변수로만 지정한다. .cat 아래의 각 레이어(.cat-layer)가
-  // 이 변수를 상속받아 같은 프레임을 보여준다(다중 배경 대신 자식 요소로 겹침).
+  // 프레임 위치는 CSS 변수(--fx/--fy)로 부모(.cat)에 지정하고,
+  // 동시에 각 .cat-layer 자식의 인라인 스타일에도 직접 기록해
+  // 일부 웹뷰/런타임에서 CSS 변수 상속이 끊겨도 안전하게 렌더링한다.
   private setFrame(el: HTMLElement, col: number, row: number) {
-    el.style.setProperty('--fx', `${col * 50}%`);
-    el.style.setProperty('--fy', `${(row * 100) / 3}%`);
+    const fx = `${col * 50}%`;
+    const fy = `${(row * 100) / 3}%`;
+    el.style.setProperty('--fx', fx);
+    el.style.setProperty('--fy', fy);
+    // 자식 .cat-layer 들에도 인라인으로 직접 프레임 위치 주입
+    for (const child of el.children) {
+      if (child.classList.contains('cat-layer')) {
+        (child as HTMLElement).style.backgroundPositionX = fx;
+        (child as HTMLElement).style.backgroundPositionY = fy;
+      }
+    }
   }
 
   // ---- 렌더링 -------------------------------------------------------------
@@ -348,8 +358,12 @@ export class Game {
   // CSS 다중 배경(background-image 여러 겹)은 일부 웹뷰/런타임에서 뒤 레이어가
   // 렌더되지 않는 문제가 있어(에디터 OK·런치 실패), 겹침을 DOM 요소로 처리한다.
   // 쌓는 순서(뒤→앞): 고양이 → 의상 → 모자. (나중 자식이 위에 그려짐)
+  // 각 레이어의 프레임 위치는 인라인 스타일로 직접 주입해 CSS 변수 상속 끊김에
+  // 대비한다.
   private applyLayers(el: HTMLElement, type: number) {
     el.textContent = '';
+    const fx = el.style.getPropertyValue('--fx') || '50%';
+    const fy = el.style.getPropertyValue('--fy') || '0%';
     const urls = [catSprite(type)];
     const clothes = store.equippedClothes[type];
     const hat = store.equippedHats[type];
@@ -359,6 +373,8 @@ export class Game {
       const layer = document.createElement('div');
       layer.className = 'cat-layer';
       layer.style.backgroundImage = `url(${u})`;
+      layer.style.backgroundPositionX = fx;
+      layer.style.backgroundPositionY = fy;
       el.appendChild(layer);
     }
   }
@@ -725,6 +741,7 @@ export class Game {
     el.style.width = `${CELL}px`;
     el.style.height = `${CELL}px`;
     el.style.zIndex = '5';
+    this.applyLayers(el, cat.type);
     this.placeAt(el, gridX(cat.col, this.stage.cols), gridY(cat.row), CELL);
     this.setFrame(el, 1, DIR.down);
 

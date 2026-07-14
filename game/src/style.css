@@ -35,14 +35,16 @@ body {
 #app {
   position: relative;
   height: 100vh; /* 화면 세로 길이에 맞춰 유연하게 높이 최대화 */
-  aspect-ratio: 480 / 1000; /* 가상 캔버스와 동일한 세로비 — 폰 형태 프레임 */
+  aspect-ratio: 445 / 967; /* iPhone 16 Pro 및 최신 플래그십 기기 규격 가로세로비 */
+  max-width: 445px; /* 최대 가로폭 445px 제약 */
   overflow: hidden;
-  background: transparent; /* 목업 테두리(베젤)와 배경을 없애고 전체 화면 그라데이션과 자연스럽게 융합 */
+  background: transparent; /* 전체 그라데이션 자연스럽게 융합 */
+  container-type: inline-size; /* 100% 비례하는 반응형 글자/버튼 크기용 컨테이너 쿼리 지원 활성화 */
+  container-name: app;
 }
 
-/* 폭이 좁은(=실제 모바일) 화면에서만 100% 풀스크린으로 확장.
-   넓은 데스크톱에서는 위 aspect-ratio 규칙이 살아 세로 폰 프레임으로 보인다. */
-@media (max-width: 560px) {
+/* 실제 모바일 화면 크기이거나 창이 가로폭 445px 이하로 작아질 경우 100% 풀스크린으로 확장 */
+@media (max-width: 445px) {
   #app {
     width: 100%;
     height: 100%;
@@ -581,31 +583,31 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 18px;
+  margin-bottom: 4cqw;
 }
 .select-top h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: clamp(20px, 6.5cqw, 28px);
 }
 .select-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 2.5cqw;
 }
 .coin {
-  font-size: 20px;
+  font-size: clamp(14px, 4.5cqw, 20px);
   font-weight: 700;
   background: rgba(255, 255, 255, 0.6);
-  padding: 6px 12px;
-  border-radius: 12px;
+  padding: 1.2cqw 2.4cqw;
+  border-radius: 2.5cqw;
 }
 .icon-btn {
-  font-size: 22px;
+  font-size: clamp(16px, 5cqw, 22px);
   background: rgba(255, 255, 255, 0.6);
   border: none;
-  border-radius: 12px;
-  width: 44px;
-  height: 44px;
+  border-radius: 2.5cqw;
+  width: clamp(36px, 10cqw, 44px);
+  height: clamp(36px, 10cqw, 44px);
   padding: 0;
   display: flex;
   align-items: center;
@@ -615,15 +617,15 @@ body {
 
 /* 메인 화면 빠른 언어 전환 버튼 (EN/KO) */
 .lang-toggle-btn {
-  min-width: 44px;
-  height: 44px;
-  padding: 0 10px;
-  font: 800 14px/1 system-ui;
+  min-width: clamp(36px, 10cqw, 44px);
+  height: clamp(36px, 10cqw, 44px);
+  padding: 0 2cqw;
+  font: 800 clamp(11px, 3.2cqw, 14px)/1 system-ui;
   letter-spacing: 0.02em;
   color: var(--ink);
   background: rgba(255, 255, 255, 0.6);
   border: none;
-  border-radius: 12px;
+  border-radius: 2.5cqw;
   cursor: pointer;
 }
 .lang-toggle-btn:active {
@@ -639,13 +641,13 @@ body {
 }
 .pager-arrow {
   flex: none;
-  width: 48px;
-  height: 48px;
+  width: clamp(38px, 10.5cqw, 48px);
+  height: clamp(38px, 10.5cqw, 48px);
   border-radius: 50%;
   border: none;
   background: rgba(255, 255, 255, 0.7);
   color: var(--ink);
-  font: 700 26px/1 system-ui;
+  font: 700 clamp(20px, 5.5cqw, 26px)/1 system-ui;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -656,23 +658,23 @@ body {
   cursor: default;
 }
 .pager-viewport {
-  width: 220px;
-  height: 260px;
+  width: clamp(180px, 50cqw, 220px);
+  height: clamp(220px, 60cqw, 260px);
   overflow: hidden;
   touch-action: pan-y;
 }
 .stage-card {
   width: 100%;
   height: 100%;
-  border-radius: 24px;
+  border-radius: 5cqw;
   background: var(--panel);
-  box-shadow: 0 6px 0 rgba(107, 79, 42, 0.2);
+  box-shadow: 0 1.2cqw 0 rgba(107, 79, 42, 0.2);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 16px;
+  gap: 2.8cqw;
+  padding: 4cqw;
   transition: transform 0.16s ease, opacity 0.16s ease;
 }
 .stage-card.slide-out-l {
@@ -692,7 +694,7 @@ body {
   opacity: 0;
 }
 .stage-card-no {
-  font-size: 56px;
+  font-size: clamp(40px, 12cqw, 56px);
   font-weight: 800;
   color: #c9722e;
 }
@@ -700,30 +702,30 @@ body {
   color: rgba(107, 79, 42, 0.4);
 }
 .stage-card-lock {
-  font-size: 32px;
+  font-size: clamp(24px, 7cqw, 32px);
 }
 .stage-card-sub {
-  font-size: 14px;
+  font-size: clamp(11px, 3.2cqw, 14px);
   color: rgba(107, 79, 42, 0.6);
 }
 .stage-card-stars {
   display: flex;
-  gap: 4px;
-  font-size: 22px;
+  gap: 1cqw;
+  font-size: clamp(18px, 5cqw, 22px);
 }
 .stage-card-stars .mini-star {
-  font-size: 22px;
+  font-size: clamp(18px, 5cqw, 22px);
 }
 .stage-play-btn {
-  margin-top: 4px;
+  margin-top: 1cqw;
   font: inherit;
   font-weight: 700;
-  font-size: 15px;
+  font-size: clamp(12px, 3.5cqw, 15px);
   color: var(--ink);
   background: rgba(107, 79, 42, 0.12);
   border: none;
-  border-radius: 12px;
-  padding: 10px 28px;
+  border-radius: 2.8cqw;
+  padding: 2.2cqw 6.2cqw;
   cursor: pointer;
 }
 .stage-play-btn.primary {

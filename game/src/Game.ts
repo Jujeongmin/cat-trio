@@ -245,19 +245,15 @@ export class Game {
   };
 
   // ---- 스프라이트 프레임 --------------------------------------------------
-  // 프레임 위치는 CSS 변수(--fx/--fy)로 부모(.cat)에 지정하고,
-  // 동시에 각 .cat-layer 자식의 인라인 스타일에도 직접 기록해
-  // 일부 웹뷰/런타임에서 CSS 변수 상속이 끊겨도 안전하게 렌더링한다.
+  // 프레임 위치를 각 .cat-layer 자식에 background-position "shorthand" 로 직접 지정.
+  // (background-position-x/y 개별 longhand·CSS 변수는 일부 웹뷰에서 안 먹어
+  //  뒤 레이어가 렌더 안 되는 원인이 되므로 shorthand·인라인만 사용한다.)
   private setFrame(el: HTMLElement, col: number, row: number) {
-    const fx = `${col * 50}%`;
-    const fy = `${(row * 100) / 3}%`;
-    el.style.setProperty('--fx', fx);
-    el.style.setProperty('--fy', fy);
-    // 자식 .cat-layer 들에도 인라인으로 직접 프레임 위치 주입
+    const pos = `${col * 50}% ${(row * 100) / 3}%`;
+    el.dataset.pos = pos; // applyLayers 가 레이어 재생성 시 재사용
     for (const child of el.children) {
       if (child.classList.contains('cat-layer')) {
-        (child as HTMLElement).style.backgroundPositionX = fx;
-        (child as HTMLElement).style.backgroundPositionY = fy;
+        (child as HTMLElement).style.backgroundPosition = pos;
       }
     }
   }
@@ -362,8 +358,7 @@ export class Game {
   // 대비한다.
   private applyLayers(el: HTMLElement, type: number) {
     el.textContent = '';
-    const fx = el.style.getPropertyValue('--fx') || '50%';
-    const fy = el.style.getPropertyValue('--fy') || '0%';
+    const pos = el.dataset.pos || '50% 0%';
     const urls = [catSprite(type)];
     const clothes = store.equippedClothes[type];
     const hat = store.equippedHats[type];
@@ -372,9 +367,19 @@ export class Game {
     for (const u of urls) {
       const layer = document.createElement('div');
       layer.className = 'cat-layer';
-      layer.style.backgroundImage = `url(${u})`;
-      layer.style.backgroundPositionX = fx;
-      layer.style.backgroundPositionY = fy;
+      // 렌더링에 필요한 모든 속성을 인라인·shorthand 로 지정 — CSS 클래스/변수/inset
+      // 지원 여부와 무관하게 어떤 런타임에서도 겹침이 깨지지 않도록.
+      const s = layer.style;
+      s.position = 'absolute';
+      s.top = '0';
+      s.left = '0';
+      s.width = '100%';
+      s.height = '100%';
+      s.backgroundImage = `url(${u})`;
+      s.backgroundRepeat = 'no-repeat';
+      s.backgroundSize = '300% 400%';
+      s.backgroundPosition = pos;
+      s.imageRendering = 'pixelated';
       el.appendChild(layer);
     }
   }

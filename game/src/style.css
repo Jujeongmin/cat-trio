@@ -243,16 +243,19 @@ body {
   filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.18));
 }
 
-/* 겹쳐 쌓이는 스프라이트 레이어(고양이/의상/모자). 시트=3열×4행에서
-   한 프레임만 보여주며, 프레임 위치(--fx/--fy)는 부모 .cat 에서 상속받아
-   모든 레이어가 같은 프레임·같은 걷기 애니메이션을 공유한다. */
+/* 겹쳐 쌓이는 스프라이트 레이어(고양이/의상/모자). 실제 렌더 속성은 전부
+   JS 인라인으로 지정한다(applyLayers) — inset·CSS변수·background-position-x 등
+   런타임별로 지원이 갈리는 기능을 배제해 어떤 웹뷰에서도 겹침이 안 깨지게.
+   아래는 인라인이 없을 때를 위한 안전 폴백일 뿐이다. */
 .cat-layer {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-repeat: no-repeat;
   background-size: 300% 400%; /* 시트 = 3열 × 4행 */
-  background-position-x: var(--fx, 50%);
-  background-position-y: var(--fy, 0%); /* 기본: 정면 정자세 */
+  background-position: 50% 0%; /* 기본: 정면 정자세 */
   image-rendering: pixelated;
 }
 
@@ -286,10 +289,10 @@ body {
 }
 @keyframes walkcycle {
   from {
-    background-position-x: 0%;
+    background-position: 0% 0%;
   }
   to {
-    background-position-x: 150%;
+    background-position: 150% 0%;
   }
 }
 

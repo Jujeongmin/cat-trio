@@ -29,6 +29,50 @@ function starRow(n: number): string {
     .join('');
 }
 
+/** 게임 톤에 맞는 자체 확인 모달. 네이티브 confirm() 이 런치 환경(iframe/웹뷰)에서
+ *  안 뜨는 문제 대응. 확인 시 onConfirm 호출, 취소/배경 클릭 시 그냥 닫힌다. */
+function showConfirm(
+  root: HTMLElement,
+  message: string,
+  confirmLabel: string,
+  onConfirm: () => void,
+): void {
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay confirm-overlay';
+  overlay.innerHTML = `
+    <div class="panel confirm-panel">
+      <p class="confirm-msg">${message}</p>
+      <div class="btns">
+        <button data-cancel>${t('cancelBtn')}</button>
+        <button class="confirm-danger" data-ok>${confirmLabel}</button>
+      </div>
+    </div>
+  `;
+  overlay.addEventListener('click', (e) => {
+    const tgt = e.target as HTMLElement;
+    if (tgt.closest('[data-ok]')) {
+      overlay.remove();
+      onConfirm();
+    } else if (tgt.closest('[data-cancel]') || tgt === overlay) {
+      overlay.remove();
+    }
+  });
+  root.appendChild(overlay);
+}
+
+/** 잠깐 떴다 사라지는 토스트 메시지. 네이티브 alert() 대체 (런치 환경에서 확실히 표시). */
+function showToast(root: HTMLElement, message: string): void {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = message;
+  root.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  window.setTimeout(() => {
+    el.classList.remove('show');
+    window.setTimeout(() => el.remove(), 300);
+  }, 1600);
+}
+
 /** 스테이지 선택 화면 (명세 5-2) — 한 번에 한 스테이지씩 넘기는 카드 방식 */
 export function showStageSelect(
   root: HTMLElement,
@@ -337,10 +381,11 @@ export function showSettings(root: HTMLElement, onReset: () => void, onClose: ()
       return;
     }
     if (tgt.closest('[data-reset]')) {
-      if (confirm(t('resetConfirm'))) {
-        onReset();
+      // 네이티브 confirm() 은 런치(iframe/웹뷰)에서 안 뜨는 경우가 있어 자체 모달 사용
+      showConfirm(root, t('resetConfirm'), t('resetConfirmYes'), () => {
         overlay.remove();
-      }
+        onReset();
+      });
       return;
     }
     if (tgt.closest('[data-close]')) {
@@ -672,7 +717,7 @@ export function showShop(root: HTMLElement, onClose: () => void): void {
       }
       if (!owned) {
         if (store.coins < SHOP_PRICE) {
-          alert(t('shopNotEnoughCoins'));
+          showToast(root, t('shopNotEnoughCoins'));
           return;
         }
         buyCostume(idx, SHOP_PRICE);

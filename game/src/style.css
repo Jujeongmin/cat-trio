@@ -856,6 +856,52 @@ body {
   cursor: pointer;
 }
 
+/* ===== 자체 확인 모달 (네이티브 confirm 대체) ===== */
+.confirm-overlay {
+  z-index: 3200; /* 설정 모달(2000) 위에 뜨도록 */
+}
+.confirm-panel {
+  min-width: 240px;
+  max-width: 300px;
+}
+.confirm-msg {
+  margin: 4px 0 20px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+.confirm-panel .confirm-danger {
+  background: #d9534f;
+}
+
+/* ===== 토스트 (네이티브 alert 대체) ===== */
+.toast {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  transform: translate(-50%, 8px);
+  z-index: 3600; /* 광고 오버레이(3000)·확인 모달(3200) 보다 위 */
+  max-width: 80%;
+  padding: 11px 18px;
+  border-radius: 14px;
+  background: rgba(40, 28, 14, 0.92);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 /* ===== 튜토리얼 ===== */
 .tut-dim {
   position: absolute;

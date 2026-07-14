@@ -31,6 +31,8 @@ const dict = {
   resetBtn: { ko: '데이터 초기화', en: 'Reset Data' },
   closeBtn: { ko: '닫기', en: 'Close' },
   resetConfirm: { ko: '모든 진행 상황을 초기화할까요?', en: 'Reset all progress?' },
+  resetConfirmYes: { ko: '초기화', en: 'Reset' },
+  cancelBtn: { ko: '취소', en: 'Cancel' },
 
   backAria: { ko: '뒤로', en: 'Back' },
   shuffleLabel: { ko: '셔플', en: 'Shuffle' },

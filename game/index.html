@@ -17,9 +17,19 @@
       // REQUEST_GAME_SIZE 를 postMessage 하면 현재 렌더 크기를 응답한다.
       (function () {
         function reportGameSize() {
-          const height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
-          const width = Math.max(document.body.scrollWidth, document.documentElement.scrollWidth);
-          window.parent.postMessage({ type: 'GAME_SIZE_RESPONSE', height, width }, '*');
+          const appEl = document.getElementById('app');
+          if (appEl) {
+            // #app 엘리먼트의 실제 렌더링된 물리 크기를 기반으로 보고하여
+            // 플랫폼 에디터 상에서 아이프레임(Iframe) 크기가 게임 가로세로비(445x704)에 맞게 밀착 축소되도록 만듭니다.
+            const rect = appEl.getBoundingClientRect();
+            const width = Math.round(rect.width) || 445;
+            const height = Math.round(rect.height) || 704;
+            window.parent.postMessage({ type: 'GAME_SIZE_RESPONSE', height, width }, '*');
+          } else {
+            const height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+            const width = Math.max(document.body.scrollWidth, document.documentElement.scrollWidth);
+            window.parent.postMessage({ type: 'GAME_SIZE_RESPONSE', height, width }, '*');
+          }
         }
         window.addEventListener('load', reportGameSize);
         window.addEventListener('resize', reportGameSize);

@@ -9,6 +9,11 @@ export default defineConfig({
   // index.html 과 소스가 위치한 앱 루트
   root: 'game',
 
+  // .env 는 프로젝트 루트에 있다. root 가 'game' 이라 기본 envDir(=root)로는
+  // VITE_AGENT8_VERSE 등이 로드되지 않아 빌드에 verse 가 안 박히고, 런치에서
+  // 게임서버가 "default" verse 로 붙어 연결이 실패했다 — 루트로 명시.
+  envDir: __dirname,
+
   // 배포 경로에 관계없이 자산이 로드되도록 상대 경로(base) 사용.
   // Verse8 처럼 하위 경로에서 서빙될 때도 안전하다.
   base: './',

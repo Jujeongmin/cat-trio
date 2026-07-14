@@ -7,11 +7,16 @@ export const catSprite = (type: number): string => {
   return new URL(`cats/Cat_${t}.png`, window.location.href).href;
 };
 
-// 코스튬 스프라이트 (game/public/costumes/Cat_Costume_0.png ~ Cat_Costume_13.png)
+// 코스튬 스프라이트 (game/public/costumes/Cat_Costume_N_v2.png)
 // 고양이 없이 착용물만 그려진 투명 배경 시트 — 기본 고양이 스프라이트 위에
 // 겹쳐 렌더링해 털색을 유지한 채 입힌다.
 // 프레임 포맷은 고양이 시트와 동일한 3열×4행(32px).
 // 0~5 = 의상(clothes), 6~13 = 모자(hat). 카테고리별로 슬롯이 달라 동시 착용 가능.
+//
+// ⚠️ 파일명의 _v2 는 캐시 무력화용: 배포 CDN이 같은 경로의 public 에셋을 예전
+// 버전으로 계속 서빙해(코스튬을 풀 스프라이트→착용물 전용으로 교체했는데 옛
+// 파일이 나옴) 런치에서만 코스튬이 깨졌다. public 에셋을 내용만 바꿔 교체할 땐
+// 반드시 파일명도 함께 바꿀 것.
 export const COSTUME_COUNT = 14;
 
 export type CostumeCategory = 'clothes' | 'hat';
@@ -21,5 +26,5 @@ export const costumeCategory = (index: number): CostumeCategory =>
 
 export const costumeSprite = (index: number): string => {
   const i = ((index % COSTUME_COUNT) + COSTUME_COUNT) % COSTUME_COUNT;
-  return new URL(`costumes/Cat_Costume_${i}.png`, window.location.href).href;
+  return new URL(`costumes/Cat_Costume_${i}_v2.png`, window.location.href).href;
 };

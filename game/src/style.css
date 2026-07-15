@@ -1031,8 +1031,9 @@ body {
 
 /* ===== 코스튬 상점 ===== */
 .shop-panel {
+  width: 90%; /* min/max-width 사이에서 실제로 가용 폭을 채워 타일이 커지도록 */
   min-width: 300px;
-  max-width: 360px;
+  max-width: 400px;
   max-height: 92vh;
   overflow-y: auto;
   /* 스크롤이 생겨도 스크롤바는 보이지 않게 */
@@ -1065,6 +1066,12 @@ body {
   width: 36px;
   height: 36px;
 }
+.shop-info-toggle {
+  font: 700 16px/1 system-ui;
+  flex: none;
+  width: 32px;
+  height: 32px;
+}
 .shop-coin {
   font-size: 15px;
   font-weight: 700;
@@ -1077,9 +1084,10 @@ body {
   gap: 8px;
   margin-bottom: 10px;
 }
-/* 착용물 갤러리는 5열로 촘촘하게 — 의상(7칸)/모자(9칸) 각각 2줄에 들어간다 */
+/* 착용물 갤러리는 4열로 — 타일이 커져 착용/구매 상태가 잘 보인다 */
 .shop-grid.shop-costumes {
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
 }
 .shop-section-label {
   font-size: 13px;
@@ -1113,56 +1121,26 @@ body {
 }
 .shop-lock {
   position: absolute;
-  right: 3px;
-  top: 3px;
-  font-size: 12px;
+  right: 4px;
+  top: 4px;
+  font-size: 15px;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4));
 }
 
-/* 타일 구석의 작은 ⓘ 설명 버튼 */
-.shop-info-btn {
-  position: absolute;
-  left: 2px;
-  top: 2px;
-  z-index: 2;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  line-height: 1;
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-  cursor: pointer;
-}
-.shop-info-btn:active {
-  transform: scale(0.9);
-}
-
-/* 코스튬 정보 팝업 */
+/* 코스튬 안내 팝업 (탭당 하나, 헤더 ⓘ 버튼으로 연다) */
 .costume-info-panel {
   min-width: 240px;
   max-width: 300px;
-}
-.costume-info-preview {
-  position: relative;
-  width: 108px;
-  height: 108px;
-  margin: 6px auto 4px;
-  image-rendering: pixelated;
 }
 .shop-badge {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   text-align: center;
-  line-height: 1.6;
+  line-height: 1.9;
   color: #fff;
   background: rgba(107, 79, 42, 0.65);
 }

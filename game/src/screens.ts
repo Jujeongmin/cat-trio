@@ -60,6 +60,28 @@ function showConfirm(
   root.appendChild(overlay);
 }
 
+/** 코스튬 정보 팝업 — 해당 고양이가 그 코스튬을 입은 모습(미리보기)과 안내 문구. */
+function showCostumeInfo(root: HTMLElement, type: number, idx: number): void {
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay confirm-overlay';
+  const preview = [catSprite(type), costumeSprite(idx)]
+    .map((u) => `<i class="cat-layer" style="background-image:url(${u})"></i>`)
+    .join('');
+  overlay.innerHTML = `
+    <div class="panel costume-info-panel">
+      <h2>${t('costumeInfoTitle')}</h2>
+      <div class="costume-info-preview">${preview}</div>
+      <p class="confirm-msg">${t('costumeInfoDesc')}</p>
+      <div class="btns"><button class="primary" data-close>${t('closeBtn')}</button></div>
+    </div>
+  `;
+  overlay.addEventListener('click', (e) => {
+    const tgt = e.target as HTMLElement;
+    if (tgt.closest('[data-close]') || tgt === overlay) overlay.remove();
+  });
+  root.appendChild(overlay);
+}
+
 /** 잠깐 떴다 사라지는 토스트 메시지. 네이티브 alert() 대체 (런치 환경에서 확실히 표시). */
 function showToast(root: HTMLElement, message: string): void {
   const el = document.createElement('div');
@@ -660,6 +682,7 @@ export function showShop(root: HTMLElement, onClose: () => void): void {
           return `
             <button class="shop-costume-tile ${isEquippedHere ? 'equipped' : ''} ${!owned ? 'locked' : ''}" data-action="costume" data-idx="${idx}">
               <i class="shop-sprite">${spriteLayers([catSprite(type), costumeSprite(idx)])}</i>
+              <span class="shop-info-btn" data-info="${idx}" role="button" aria-label="${t('costumeInfoAria')}">ⓘ</span>
               ${!owned ? '<span class="shop-lock">🔒</span>' : ''}
               ${badge}
             </button>`;
@@ -697,6 +720,12 @@ export function showShop(root: HTMLElement, onClose: () => void): void {
     const typeTile = tgt.closest('.shop-type-tile') as HTMLElement | null;
     if (typeTile) {
       renderGallery(Number(typeTile.dataset.type));
+      return;
+    }
+    // ⓘ 버튼은 타일보다 먼저 처리 — 구매/장착으로 넘어가지 않게 한다.
+    const infoBtn = tgt.closest('.shop-info-btn') as HTMLElement | null;
+    if (infoBtn && currentType !== null) {
+      showCostumeInfo(root, currentType, Number(infoBtn.dataset.info));
       return;
     }
     const costumeTile = tgt.closest('.shop-costume-tile') as HTMLElement | null;

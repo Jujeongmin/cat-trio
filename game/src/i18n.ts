@@ -76,6 +76,12 @@ const dict = {
   shopNotEnoughCoins: { ko: '코인이 부족해요', en: 'Not enough coins' },
   shopClothesLabel: { ko: '👕 의상', en: '👕 Outfits' },
   shopHatsLabel: { ko: '🎩 모자', en: '🎩 Hats' },
+  costumeInfoAria: { ko: '코스튬 설명', en: 'Costume info' },
+  costumeInfoTitle: { ko: '코스튬 안내', en: 'About Costumes' },
+  costumeInfoDesc: {
+    ko: '이 코스튬을 장착하면, 스테이지에 나오는 이 고양이가 코스튬을 입은 모습으로 등장해요! 🐾',
+    en: 'Equip this costume and this cat will appear wearing it during stages! 🐾',
+  },
 } as const;
 
 type Key = keyof typeof dict;

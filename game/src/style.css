@@ -1118,6 +1118,42 @@ body {
   font-size: 12px;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4));
 }
+
+/* 타일 구석의 작은 ⓘ 설명 버튼 */
+.shop-info-btn {
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+.shop-info-btn:active {
+  transform: scale(0.9);
+}
+
+/* 코스튬 정보 팝업 */
+.costume-info-panel {
+  min-width: 240px;
+  max-width: 300px;
+}
+.costume-info-preview {
+  position: relative;
+  width: 108px;
+  height: 108px;
+  margin: 6px auto 4px;
+  image-rendering: pixelated;
+}
 .shop-badge {
   position: absolute;
   left: 0;

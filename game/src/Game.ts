@@ -588,12 +588,13 @@ export class Game {
       el.style.width = `${catSize}px`;
       el.style.height = `${catSize}px`;
       this.placeAt(el, exX, exY, catSize);
-      await wait(260);
+      await wait(560); // 이동 transition(0.6s)에 맞춰 걷기 애니메이션이 보이도록
 
       this.trySpawn(); // 출구 칸이 비었으면 파이프에서 다음 고양이
 
-      el.classList.remove('walk');
+      // 슬롯까지 이동하는 동안에도 계속 걷게 두고, 도착 후에 걷기를 멈춘다.
       await this.moveToSlots();
+      el.classList.remove('walk');
       this.setFrame(el, 1, DIR.down);
 
       const matched = this.resolveMatches();
@@ -623,7 +624,7 @@ export class Game {
       el.style.height = `${catSize}px`;
       this.placeAt(el, slotCenterX(i, this.capacity), SLOT_Y, catSize);
     });
-    await wait(300);
+    await wait(560);
   }
 
   // 3매치 — 데이터 즉시 제거, 회전 연출은 논블로킹

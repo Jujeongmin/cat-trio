@@ -11,7 +11,8 @@ export const CELL_BOX = 78; // 한 칸(타일) 크기
 export const SLOT_CAT = 56; // 슬롯에 들어간 고양이 크기(기본, capacity=7 기준)
 export const SLOT_BOX = 62; // 슬롯 칸 크기(기본)
 export const SLOT_GAP = 6;
-export const SLOT_Y = 664; // 슬롯 줄 중심 y
+// 슬롯 줄 중심 y — 6행짜리 큰 스테이지의 탈출구(~656)와 겹치지 않게 아래로 내렸다.
+export const SLOT_Y = 724;
 export const MAX_CAPACITY = 10; // 슬롯+1 아이템으로 늘어날 수 있는 최대 칸 수
 
 // 슬롯+1 아이템으로 칸이 늘어나도 화면 폭을 넘지 않도록 칸 크기를 줄인다.
@@ -36,7 +37,7 @@ export const MAX_ROWS = Math.floor((596 - BOARD_TOP) / CELL_BOX);
 // 스테이지 모양/채움에 따라 고양이가 일부 행에만 몰릴 수 있으므로, 격자 행 수가
 // 아니라 "실제 고양이가 차지한 행 범위(minRow~maxRow)"의 중심을 화면 중앙에 맞춘다.
 // gridY 에만 반영되므로 격자 좌표/난이도는 그대로다.
-const BOARD_CENTER_Y = 360; // (타임바 하단 ~86 + 슬롯 상단 ~634) / 2
+const BOARD_CENTER_Y = 388; // (타임바 하단 ~86 + 내려간 슬롯 상단 ~693) / 2
 const BOARD_MIN_TOP = 96; // 타임바 바로 아래 — 여기보다 위로는 올라가지 않게
 let boardOffsetY = 0;
 export function setBoardRowSpan(minRow: number, maxRow: number): void {

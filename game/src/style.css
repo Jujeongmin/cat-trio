@@ -524,13 +524,13 @@ body {
   position: absolute;
   left: 0;
   right: 0;
-  top: 716px;
+  top: 792px; /* 내려간 슬롯(하단 ~755) 아래로 — 슬롯창과 안 겹치게 */
   bottom: 0;
   z-index: 8;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 22px 18px 34px;
+  gap: 10px;
+  padding: 16px 16px 24px;
   background: linear-gradient(#fff8ea, #f4e4c2);
   /* 박스 접는선(절취선) 느낌의 파선 — 골판지 미로와 톤을 잇는다 */
   border-top: 3px dashed rgba(173, 129, 72, 0.4);
@@ -544,9 +544,9 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 5px;
   border: 2px solid rgba(173, 129, 72, 0.3);
-  border-radius: 18px;
+  border-radius: 16px;
   background: #fff;
   box-shadow: 0 4px 0 var(--kraft-edge);
   font: inherit;
@@ -565,11 +565,11 @@ body {
   box-shadow: none;
 }
 .item-ic {
-  font-size: 34px;
+  font-size: 27px;
   line-height: 1;
 }
 .item-label {
-  font-size: 15px;
+  font-size: 13px;
 }
 .item-cost {
   display: inline-flex;
@@ -1119,9 +1119,9 @@ body {
   position: absolute;
   left: 24px;
   right: 24px;
-  /* 스테이지1(튜토리얼 전용)은 3x4 칸이라 보드 내용이 대략 438px 아래서
-     끝난다 — 슬롯(664px) 사이 빈 공간에 놓아 보드/고양이를 가리지 않게 */
-  top: 476px;
+  /* 보드 하단과 내려간 슬롯 트레이(중심 724, 상단 ~693) 사이 빈 공간에 놓아
+     보드/고양이를 가리지 않게 한다. */
+  top: 560px;
   z-index: 1000;
   background: var(--panel);
   border-radius: 16px;

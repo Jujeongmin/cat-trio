@@ -286,7 +286,7 @@ export function showResult(
     .join('');
 
   overlay.innerHTML = `
-    <div class="panel">
+    <div class="panel result-panel ${result.win ? 'result-win' : ''}">
       <h2>${result.win ? t('clearTitle') : t('gameOverTitle')}</h2>
       ${
         result.win

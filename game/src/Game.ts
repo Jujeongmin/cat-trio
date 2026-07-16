@@ -333,18 +333,22 @@ export class Game {
       add(arrow);
     }
 
-    // 6) 스폰 파이프 (+ 잔량 뱃지)
+    // 6) 스폰 박스 — 한 칸을 통째로 차지하는 열린 골판지 상자. 고양이가 이
+    //    상자 안에서 튀어나오는 연출(spawn-in)과 어우러진다. 고양이(z5)가
+    //    상자(z4) 위에 얹혀 "상자 속 고양이"처럼 보인다.
     for (const sp of this.spawners) {
-      const pipe = document.createElement('div');
-      pipe.className = 'spawner';
-      const pw = CELL_BOX * 0.62;
-      pipe.style.width = `${pw}px`;
-      pipe.style.height = `${CELL_BOX * 0.72}px`;
-      pipe.style.left = `${gridX(sp.col, cols) - pw / 2}px`;
-      pipe.style.top = `${gridY(sp.row) - CELL_BOX / 2 - CELL_BOX * 0.5}px`;
-      pipe.innerHTML = '<i></i><b class="spawn-count"></b>';
-      add(pipe);
-      sp.countEl = pipe.querySelector('.spawn-count');
+      const box = document.createElement('div');
+      box.className = 'spawn-box';
+      box.style.width = `${CELL_BOX}px`;
+      box.style.height = `${CELL_BOX}px`;
+      this.placeAt(box, gridX(sp.col, cols), gridY(sp.row), CELL_BOX);
+      box.innerHTML =
+        '<i class="spawn-flap spawn-flap-l"></i>' +
+        '<i class="spawn-flap spawn-flap-r"></i>' +
+        '<span class="spawn-hole"></span>' +
+        '<b class="spawn-count"></b>';
+      add(box);
+      sp.countEl = box.querySelector('.spawn-count');
       this.updateSpawnCount(sp);
     }
 

@@ -291,64 +291,103 @@ body {
   z-index: 1;
 }
 
-/* 스폰 박스 — 한 칸을 통째로 차지하는 열린 골판지 상자. 고양이가 이 안에서
-   튀어나오는 연출(spawn-in). 고양이(z5)가 상자(z4) 위에 얹혀 "상자 속 고양이". */
+/* ===== 스폰 박스 — 한 칸을 차지하는 열린 골판지 상자 =====
+   "상자 속 고양이"로 보이게 뒤판/앞판으로 나눠 고양이를 사이에 끼운다:
+     .spawn-box(z3, 상자 속·뚜껑) → .cat(z5) → .spawn-box-front(z6, 아랫부분을 가림)
+   잔량 뱃지(.spawn-count)는 z7 로 따로 올려 항상 보이게 한다. */
+
+/* 뒤판(z3) — 상자 속(골판지 속살 + 옆벽 그늘)과 뚜껑 플랩. 고양이 뒤에 깔린다. */
 .spawn-box {
   position: absolute;
-  z-index: 4;
-  border-radius: 6px 6px 9px 9px;
-  /* 상자 앞면 — 위 밝고 아래 어두운 골판지 + 세로 결 */
+  z-index: 3;
+  border-radius: 2px 2px 5px 5px; /* 상자답게 각지게 */
   background:
-    repeating-linear-gradient(
+    /* 좌우 안쪽 벽 그늘 → 깊이감 */
+    linear-gradient(
       90deg,
-      rgba(107, 79, 42, 0.08) 0px,
-      rgba(107, 79, 42, 0.08) 2px,
-      transparent 2px,
-      transparent 11px
+      rgba(70, 46, 20, 0.28) 0,
+      transparent 16%,
+      transparent 84%,
+      rgba(70, 46, 20, 0.28) 100%
     ),
-    linear-gradient(#e6c99b, #c8975c);
+    /* 상자 속살: 위쪽 그늘 → 아래로 밝아짐 */
+    linear-gradient(#8f6a3e 0 14%, #b08a5e 14%, #a37d51 100%);
   border: 2px solid var(--kraft-edge);
-  box-shadow:
-    inset 0 4px 0 rgba(255, 255, 255, 0.3),
-    inset 0 -7px 0 rgba(0, 0, 0, 0.14);
+  box-shadow: inset 0 5px 6px rgba(60, 40, 16, 0.38); /* 입구 아래 그늘 */
 }
-/* 상자 안 어둠(고양이가 나오는 구멍) — 위쪽에 살짝 */
-.spawn-hole {
+/* 뒤로 세워진 뚜껑 — 상자 위로 삐져나와 "열린 상자"임을 보여준다 */
+.spawn-box::before {
+  content: "";
   position: absolute;
-  left: 16%;
-  right: 16%;
-  top: 12%;
-  height: 30%;
-  background: rgba(60, 40, 20, 0.34);
-  border-radius: 6px;
-  box-shadow: inset 0 3px 4px rgba(0, 0, 0, 0.3);
+  left: 30%;
+  right: 30%;
+  top: -9px;
+  height: 11px;
+  background: linear-gradient(#c79a5f, #a97c47);
+  border: 2px solid var(--kraft-edge);
+  border-radius: 2px 2px 0 0;
+  z-index: -1;
 }
-/* 좌우로 활짝 젖혀진 뚜껑 플랩 — 상자가 열려 있음을 보여준다 */
+/* 좌우로 활짝 젖혀진 뚜껑 플랩 — 위로 세워 옆 칸 침범을 줄인다 */
 .spawn-flap {
   position: absolute;
-  top: -8px;
-  width: 44%;
-  height: 15px;
-  background: var(--kraft-deep);
+  top: -2px;
+  width: 30%;
+  height: 12px;
+  background: linear-gradient(#c99c62, #a87b46);
   border: 2px solid var(--kraft-edge);
-  border-radius: 4px;
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
 }
 .spawn-flap-l {
   left: 2%;
   transform-origin: bottom right;
-  transform: rotate(-26deg);
+  transform: rotate(58deg);
 }
 .spawn-flap-r {
   right: 2%;
   transform-origin: bottom left;
-  transform: rotate(26deg);
+  transform: rotate(-58deg);
 }
-/* 잔량 뱃지 (남은 마리 수) — 셀 밖 우상단 모서리라 고양이와 거의 안 겹친다 */
+
+/* 앞판(z6) — 고양이 "앞"에 놓여 아랫부분을 가려 상자 속에 들어간 것처럼 보이게.
+   클릭은 통과시켜(pointer-events:none) 고양이 선택을 막지 않는다. */
+.spawn-box-front {
+  position: absolute;
+  z-index: 6;
+  pointer-events: none;
+  border-radius: 0 0 5px 5px;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(90, 60, 30, 0.26) 0,
+      transparent 10%,
+      transparent 90%,
+      rgba(90, 60, 30, 0.26) 100%
+    ),
+    linear-gradient(#f2dbae, #cd9c64);
+  border: 2px solid var(--kraft-edge);
+  border-top: 2px solid #a87b46;
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.4);
+}
+/* 앞판 세로 포장테이프 */
+.spawn-box-front::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 24%;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, rgba(228, 202, 150, 0.95), rgba(201, 167, 109, 0.95));
+  box-shadow:
+    inset 1px 0 0 rgba(255, 255, 255, 0.45),
+    inset -1px 0 0 rgba(0, 0, 0, 0.18);
+}
+
+/* 잔량 뱃지 — 보드에 직접 올려(z7) 고양이·앞판보다 항상 위에 보이게 */
 .spawn-count {
   position: absolute;
-  top: -11px;
-  right: -11px;
+  z-index: 7;
   min-width: 24px;
   height: 24px;
   padding: 0 4px;
@@ -361,7 +400,6 @@ body {
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
   border: 2px solid var(--panel);
-  z-index: 6;
 }
 .spawn-count.empty {
   background: #c2b291;

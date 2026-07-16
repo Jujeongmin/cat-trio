@@ -333,22 +333,38 @@ export class Game {
       add(arrow);
     }
 
-    // 6) 스폰 박스 — 한 칸을 통째로 차지하는 열린 골판지 상자. 고양이가 이
-    //    상자 안에서 튀어나오는 연출(spawn-in)과 어우러진다. 고양이(z5)가
-    //    상자(z4) 위에 얹혀 "상자 속 고양이"처럼 보인다.
+    // 6) 스폰 박스 — 한 칸을 차지하는 열린 골판지 상자. "상자 속 고양이"로 보이도록
+    //    뒤판/앞판을 나눠 고양이(z5)를 사이에 끼운다:
+    //      뒤판(z3, 상자 속·뚜껑 플랩) → 고양이(z5) → 앞판(z6, 아랫부분을 가림)
+    //    잔량 뱃지는 z7 로 따로 올려 항상 보이게 한다.
     for (const sp of this.spawners) {
-      const box = document.createElement('div');
-      box.className = 'spawn-box';
-      box.style.width = `${CELL_BOX}px`;
-      box.style.height = `${CELL_BOX}px`;
-      this.placeAt(box, gridX(sp.col, cols), gridY(sp.row), CELL_BOX);
-      box.innerHTML =
-        '<i class="spawn-flap spawn-flap-l"></i>' +
-        '<i class="spawn-flap spawn-flap-r"></i>' +
-        '<span class="spawn-hole"></span>' +
-        '<b class="spawn-count"></b>';
-      add(box);
-      sp.countEl = box.querySelector('.spawn-count');
+      const cx = gridX(sp.col, cols);
+      const cy = gridY(sp.row);
+
+      const back = document.createElement('div');
+      back.className = 'spawn-box';
+      back.style.width = `${CELL_BOX}px`;
+      back.style.height = `${CELL_BOX}px`;
+      this.placeAt(back, cx, cy, CELL_BOX);
+      back.innerHTML =
+        '<i class="spawn-flap spawn-flap-l"></i><i class="spawn-flap spawn-flap-r"></i>';
+      add(back);
+
+      const frontH = Math.round(CELL_BOX * 0.32);
+      const front = document.createElement('div');
+      front.className = 'spawn-box-front';
+      front.style.width = `${CELL_BOX}px`;
+      front.style.height = `${frontH}px`;
+      front.style.left = `${cx - CELL_BOX / 2}px`;
+      front.style.top = `${cy + CELL_BOX / 2 - frontH}px`;
+      add(front);
+
+      const badge = document.createElement('b');
+      badge.className = 'spawn-count';
+      badge.style.left = `${cx + CELL_BOX / 2 - 13}px`;
+      badge.style.top = `${cy - CELL_BOX / 2 - 11}px`;
+      this.boardEl.appendChild(badge);
+      sp.countEl = badge;
       this.updateSpawnCount(sp);
     }
 

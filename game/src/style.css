@@ -4,6 +4,13 @@
   --panel: #fff8ea;
   --ink: #6b4f2a;
   --accent: #ff9f68;
+  /* 골판지 박스 미로 테마 — HUD/보드 전용 토큰 */
+  --kraft-deep: #dfc094; /* 박스 윗면 */
+  --kraft-edge: #ad8148; /* 테이프·모서리 트림 */
+  --marker: #5c3d20; /* 마커 손글씨 잉크 */
+  --twine: #c9a06a; /* 태그 끈 */
+  --font-display: "Baloo 2", system-ui, "Apple SD Gothic Neo", sans-serif;
+  --font-hand: "Gaegu", "Baloo 2", system-ui, sans-serif;
   color-scheme: light;
 }
 
@@ -118,8 +125,58 @@ body {
   padding: 0 12px;
   font-size: 18px;
 }
-.hud-item b {
-  font-size: 22px;
+/* HUD 아이템 칩 — 골판지 태그 느낌 */
+.hud-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--kraft-deep);
+  border: 2px solid var(--kraft-edge);
+  border-radius: 14px;
+  padding: 7px 13px;
+  box-shadow: 0 2px 0 rgba(107, 79, 42, 0.22);
+}
+/* 스테이지 태그 — 위에 끈고리를 매달아 "이름표" 느낌 */
+.hud-stage {
+  position: relative;
+  margin-top: 6px;
+  padding-top: 6px;
+  gap: 7px;
+}
+.hud-stage::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 16px;
+  height: 9px;
+  border: 2px solid var(--twine);
+  border-bottom: none;
+  border-radius: 9px 9px 0 0;
+  transform: translateX(-50%);
+}
+.hud-stage-label {
+  font-family: var(--font-hand);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--marker);
+  letter-spacing: 0.02em;
+}
+.hud-stage-num {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 800;
+  color: var(--marker);
+}
+/* 코인 태그 — 작은 복주머니 느낌으로 톤만 다르게 */
+.hud-coin {
+  background: var(--panel);
+  border-color: rgba(169, 129, 72, 0.4);
+}
+.hud-coin b {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 800;
   color: #c9722e;
 }
 
@@ -138,27 +195,52 @@ body {
   inset: 0;
 }
 
-/* 컨테이너 채움 타일 (shape 칸) — 인접 타일이 이어져 모양을 이룬다 */
+/* 컨테이너 채움 타일 (shape 칸) — 골판지 박스 윗면. 인접 타일이 이어져
+   커다란 박스 미로 하나를 이룬다. 은은한 골판지 결(다이애거널 스트라이프)을 얹는다. */
 .maze-fill {
   position: absolute;
-  background: #eaf4fb;
+  background-color: var(--kraft-deep);
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(173, 129, 72, 0.14) 0px,
+    rgba(173, 129, 72, 0.14) 3px,
+    transparent 3px,
+    transparent 13px
+  );
+  box-shadow: inset 0 0 0 1px rgba(173, 129, 72, 0.22);
   z-index: 0;
 }
-/* 컨테이너 경계 벽 선분(파란) — shape 바깥과 접한 변에만 */
+/* 컨테이너 경계 — 박스 테두리를 감싼 포장 테이프. 대각 크로스해치로 테이프
+   특유의 광택 결을 표현 */
 .maze-border {
   position: absolute;
-  background: #5aa6e6;
-  border-radius: 3px;
+  background-color: var(--kraft-edge);
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.18) 0px,
+    rgba(255, 255, 255, 0.18) 3px,
+    transparent 3px,
+    transparent 7px
+  );
+  border-radius: 4px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset;
   z-index: 2;
 }
+/* 탈출구 — 상자에 뚫린 펫도어 플랩 (기존 자리 크기는 JS 인라인 계산과
+   맞춰야 하므로 width 는 28px 유지) */
 .exit-arrow {
   position: absolute;
   width: 28px;
+  height: 20px;
   text-align: center;
-  color: #5aa6e6;
-  font-size: 20px;
-  line-height: 1;
+  color: #fff;
+  font-size: 13px;
+  line-height: 18px;
   z-index: 6;
+  background: var(--accent);
+  border: 2px solid var(--panel);
+  border-radius: 4px 4px 11px 11px;
+  box-shadow: 0 2px 0 rgba(107, 79, 42, 0.3);
   animation: exitbob 1s ease-in-out infinite;
 }
 @keyframes exitbob {
@@ -171,24 +253,47 @@ body {
   }
 }
 
-/* 격자 셀의 둥근 홈(recess) — 고양이를 빼면 드러난다 */
+/* 격자 셀의 둥근 홈(recess) — 고양이의 포근한 둥지. 옅은 발바닥 자국을
+   워터마크로 얹어(SVG, fill-opacity 로 흐리게 미리 구워둠) 고양이가
+   자리를 비웠을 때만 은은하게 드러나게 한다. */
 .cell {
   position: absolute;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: inset 0 2px 4px rgba(58, 110, 150, 0.2);
+  border-radius: 26px;
+  background-color: var(--panel);
+  background-image:
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cg%20fill='%238a5a34'%20fill-opacity='0.16'%3E%3Cellipse%20cx='50'%20cy='62'%20rx='22'%20ry='17'/%3E%3Cellipse%20cx='23'%20cy='33'%20rx='10'%20ry='13'%20transform='rotate(-20%2023%2033)'/%3E%3Cellipse%20cx='50'%20cy='23'%20rx='10'%20ry='13'/%3E%3Cellipse%20cx='77'%20cy='33'%20rx='10'%20ry='13'%20transform='rotate(20%2077%2033)'/%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(circle at 35% 30%, #fffdf6, var(--panel) 72%);
+  background-repeat: no-repeat, no-repeat;
+  background-position: center, center;
+  background-size: 44%, cover;
+  box-shadow:
+    inset 0 3px 6px rgba(138, 90, 52, 0.22),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.6);
   z-index: 1;
 }
 
-/* 스폰 파이프 — 출구 칸이 비면 다음 고양이가 여기서 나온다 */
+/* 스폰 슈트 — 출구 칸이 비면 다음 고양이가 이 골판지 배송 구멍에서 떨어진다.
+   (기존 회색 금속 파이프 → 크라프트 박스 톤 + 살짝 젖혀진 뚜껑 플랩) */
 .spawner {
   position: absolute;
   z-index: 4;
-  background: linear-gradient(#9aa3ab, #6f7880);
-  border-radius: 10px 10px 6px 6px;
+  background: linear-gradient(var(--kraft-deep), var(--kraft-edge));
+  border-radius: 8px 8px 6px 6px;
   box-shadow:
-    inset 0 3px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -4px 0 rgba(0, 0, 0, 0.22);
+    inset 0 3px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.18);
+}
+/* 슈트 위쪽에 살짝 열린 뚜껑 플랩 */
+.spawner::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 8%;
+  width: 84%;
+  height: 9px;
+  background: var(--kraft-edge);
+  border-radius: 6px 6px 0 0;
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.25);
 }
 .spawner i {
   position: absolute;
@@ -197,7 +302,7 @@ body {
   transform: translateX(-50%);
   width: 82%;
   height: 13px;
-  background: #383d43;
+  background: var(--marker);
   border-radius: 7px;
 }
 /* 파이프 잔량 뱃지 (남은 마리 수, 종류는 숨김) */
@@ -209,24 +314,40 @@ body {
   height: 24px;
   padding: 0 4px;
   border-radius: 12px;
-  background: #ff7a5c;
+  background: var(--accent);
   color: #fff;
   font-size: 15px;
   font-weight: 800;
   line-height: 24px;
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  border: 2px solid var(--panel);
 }
 .spawn-count.empty {
-  background: #b7b2a8;
+  background: #c2b291;
 }
 
-/* 통과 불가 벽 — 고양이가 지나가지 못하는 고정 장애물 */
+/* 통과 불가 벽 — 테이프로 X자 봉인된 상자 블록 */
 .wall {
   position: absolute;
-  border-radius: 12px;
-  background: #7c6a58;
-  background-image: linear-gradient(#8a765f, #6b5a49);
+  border-radius: 10px;
+  background: var(--kraft-edge);
+  background-image:
+    linear-gradient(
+      135deg,
+      transparent 46%,
+      rgba(255, 255, 255, 0.3) 47%,
+      rgba(255, 255, 255, 0.3) 53%,
+      transparent 54%
+    ),
+    linear-gradient(
+      45deg,
+      transparent 46%,
+      rgba(255, 255, 255, 0.3) 47%,
+      rgba(255, 255, 255, 0.3) 53%,
+      transparent 54%
+    ),
+    linear-gradient(#c1935a, var(--kraft-edge));
   box-shadow:
     inset 0 3px 0 rgba(255, 255, 255, 0.18),
     inset 0 -4px 0 rgba(0, 0, 0, 0.25);
@@ -390,7 +511,9 @@ body {
   gap: 12px;
   padding: 22px 18px 34px;
   background: linear-gradient(#fff8ea, #f4e4c2);
-  border-radius: 30px 30px 0 0;
+  /* 박스 접는선(절취선) 느낌의 파선 — 골판지 미로와 톤을 잇는다 */
+  border-top: 3px dashed rgba(173, 129, 72, 0.4);
+  border-radius: 26px 26px 0 0;
   box-shadow: 0 -6px 20px rgba(107, 79, 42, 0.18);
 }
 .item-btn {
@@ -401,10 +524,10 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: none;
-  border-radius: 20px;
+  border: 2px solid rgba(173, 129, 72, 0.3);
+  border-radius: 18px;
   background: #fff;
-  box-shadow: 0 4px 0 rgba(107, 79, 42, 0.2);
+  box-shadow: 0 4px 0 var(--kraft-edge);
   font: inherit;
   font-weight: 700;
   color: var(--ink);
@@ -413,7 +536,7 @@ body {
 }
 .item-btn:active:not(:disabled) {
   transform: translateY(3px);
-  box-shadow: 0 1px 0 rgba(107, 79, 42, 0.2);
+  box-shadow: 0 1px 0 var(--kraft-edge);
 }
 .item-btn:disabled {
   opacity: 0.45;
@@ -493,10 +616,11 @@ body {
   justify-content: space-between;
 }
 .back-btn {
-  font: 700 30px/1 system-ui;
+  position: relative;
+  font: 700 26px/1 system-ui;
   color: var(--ink);
-  background: rgba(255, 255, 255, 0.6);
-  border: none;
+  background: var(--kraft-deep);
+  border: 2px solid var(--kraft-edge);
   border-radius: 12px;
   width: 44px;
   height: 44px;
@@ -505,6 +629,18 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  box-shadow: 0 2px 0 rgba(107, 79, 42, 0.22);
+}
+/* 뜯어낸 박스 모서리 느낌의 작은 노치 — 순수 장식, 클릭 판정은 버튼 전체 */
+.back-btn::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 11px;
+  height: 11px;
+  background: var(--bg);
+  clip-path: polygon(100% 0, 0 0, 100% 100%);
 }
 .hud .stars {
   display: flex;
@@ -530,9 +666,10 @@ body {
   top: 74px;
   left: 22px;
   width: calc(100% - 44px);
-  height: 12px;
-  border-radius: 6px;
-  background: rgba(107, 79, 42, 0.18);
+  height: 13px;
+  border-radius: 7px;
+  background: rgba(107, 79, 42, 0.16);
+  border: 2px solid rgba(107, 79, 42, 0.22);
   z-index: 30; /* .hud 와 동일 — .board 에 가려지지 않게 */
   overflow: visible; /* 바 위 별 눈금이 잘리지 않도록 */
 }
@@ -540,12 +677,31 @@ body {
   display: block;
   height: 100%;
   width: 100%;
-  border-radius: 6px;
-  background: linear-gradient(90deg, #7bd88f, #4bbf6b);
+  border-radius: 5px;
+  /* 박음질(스티치) 텍스처(위) + 진행 색(아래) 2겹 — 두 배경-이미지를 하나의
+     property 에 함께 써야 뒤 선언이 앞을 덮어쓰지 않는다 */
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.22) 0px,
+      rgba(255, 255, 255, 0.22) 2px,
+      transparent 2px,
+      transparent 9px
+    ),
+    linear-gradient(90deg, #7bd88f, #4bbf6b);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.3);
   transition: width 0.2s linear;
 }
 .timebar.low i {
-  background: linear-gradient(90deg, #ff7a5c, #e94b34);
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.22) 0px,
+      rgba(255, 255, 255, 0.22) 2px,
+      transparent 2px,
+      transparent 9px
+    ),
+    linear-gradient(90deg, #ff7a5c, #e94b34);
 }
 
 /* 시간바 위에 얹은 별 눈금 — 바가 지나가면 .lost 로 꺼진다 */

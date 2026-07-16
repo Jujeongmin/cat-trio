@@ -198,8 +198,10 @@ export class Game {
   private renderHud() {
     this.hudEl.innerHTML = `
       <button class="back-btn" aria-label="${t('backAria')}">‹</button>
-      <div class="hud-item">STAGE <b>${this.stage.id}</b></div>
-      <div class="hud-item"><i class="coin-ic"></i> <b>${store.coins}</b></div>
+      <div class="hud-item hud-stage">
+        <span class="hud-stage-label">STAGE</span><b class="hud-stage-num">${this.stage.id}</b>
+      </div>
+      <div class="hud-item hud-coin"><i class="coin-ic"></i><b>${store.coins}</b></div>
     `;
   }
 

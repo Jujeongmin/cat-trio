@@ -12,6 +12,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="format-detection" content="telephone=no" />
     <title>Cat Trio</title>
+    <!-- 고양이 박스미로 테마용 폰트: Baloo 2(라운드 굵은 숫자/헤더), Gaegu(손글씨 라벨).
+         로드 실패해도 폴백(system-ui)으로 안전하게 깨진다. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Gaegu:wght@700&display=swap"
+      rel="stylesheet"
+    />
     <script>
       // Verse8 플랫폼 iframe 임베드용 크기 보고 프로토콜 — 부모 창이
       // REQUEST_GAME_SIZE 를 postMessage 하면 현재 렌더 크기를 응답한다.

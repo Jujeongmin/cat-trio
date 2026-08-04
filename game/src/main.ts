@@ -7,8 +7,16 @@ import { GameResult } from './types';
 import { unlockAudio } from './audio';
 import { applyDocumentLang } from './i18n';
 import { getGameServer, connectGameServer } from './server';
+import { VXShop } from '@verse8/platform/vanilla';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
+
+// VX 상점 초기화 (계정/verse 는 임베드 URL 파라미터에서 자동 인식). 한 번만.
+try {
+  VXShop.init();
+} catch (e) {
+  console.warn('VXShop init failed', e);
+}
 
 // 브라우저 자동재생 정책 — 첫 사용자 제스처에서 오디오를 깨우고
 // 설정이 켜져 있으면 BGM 을 시작한다.

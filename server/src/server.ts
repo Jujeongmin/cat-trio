@@ -10,9 +10,44 @@ const AD_REWARD_TABLE: Record<string, number> = {
   'double-stage-coins': 0,
 };
 
+// VX 상점 코인 상품(서버 감사용). 대시보드 productId 와 metadata coins 를 맞춰 유지.
+// 실제 코인 지급은 결제 완료 시 클라이언트가 상품 metadata 로 하고, 여기선 감사 기록만 남긴다.
+const VX_COIN_PRODUCTS: Record<string, number> = {
+  coins_1000: 1000,
+  coins_5000: 5000,
+  coins_12000: 12000,
+};
+
 export class Server {
   async ping(): Promise<string> {
     return 'pong';
+  }
+
+  /**
+   * VX 상점 결제 완료 콜백 (docs: /docs/vxshop). 플랫폼이 결제 성공 시 호출한다.
+   * 감사 기록만 남긴다 — 코인 지급은 클라이언트가 상품 metadata 로 처리.
+   * (분쟁/정산 대비 구매 로그 확보용. 알 수 없는 상품은 조용히 무시.)
+   */
+  async $onItemPurchased(payload: {
+    account: string;
+    productId: string;
+    quantity?: number;
+  }): Promise<void> {
+    const { account, productId } = payload || ({} as any);
+    if (!account || !productId) return;
+    const qty = payload.quantity ?? 1;
+    const coins = (VX_COIN_PRODUCTS[productId] ?? 0) * qty;
+    try {
+      await $global.addCollectionItem('vx_purchases', {
+        account,
+        productId,
+        quantity: qty,
+        coins,
+        createdAt: Date.now(),
+      });
+    } catch {
+      /* 감사 기록 실패는 결제 흐름에 영향 주지 않도록 무시 */
+    }
   }
 
   /**

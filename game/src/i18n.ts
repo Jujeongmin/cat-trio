@@ -69,6 +69,14 @@ const dict = {
   rankFetchFailed: { ko: '랭킹을 불러오지 못했어요.', en: 'Failed to fetch rankings.' },
   rankUpdateFailed: { ko: '변경에 실패했어요', en: 'Failed to update' },
 
+  vxShopAria: { ko: '코인 상점', en: 'Coin shop' },
+  vxShopTitle: { ko: '💎 코인 상점', en: '💎 Coin Shop' },
+  vxShopLoading: { ko: '상품 불러오는 중...', en: 'Loading products...' },
+  vxShopEmpty: { ko: '지금은 구매할 수 있는 상품이 없어요', en: 'No products available right now' },
+  vxBuyBtn: { ko: '구매', en: 'Buy' },
+  vxThanks: { ko: '코인 {n}개를 받았어요! 🐾', en: 'Got {n} coins! 🐾' },
+  vxPurchaseFailed: { ko: '구매를 완료하지 못했어요', en: 'Purchase did not complete' },
+
   shopAria: { ko: '상점', en: 'Shop' },
   shopTitle: { ko: '🛍️ 코스튬 상점', en: '🛍️ Costume Shop' },
   shopTypeTitle: { ko: '고양이 {n}', en: 'Cat {n}' },

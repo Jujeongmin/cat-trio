@@ -4,6 +4,7 @@ import { bgm } from './audio';
 import { claimRewardedAd } from './ads';
 import { t, tf, applyDocumentLang } from './i18n';
 import { connectGameServer } from './server';
+import { VXShop, type VXShopItem } from '@verse8/platform/vanilla';
 import {
   catSprite,
   costumeSprite,
@@ -78,6 +79,88 @@ function showCostumeInfo(root: HTMLElement): void {
   root.appendChild(overlay);
 }
 
+/** 상품 metadata(JSON 문자열)에서 지급 코인 수를 읽는다. 없으면 0. */
+function coinsFromItem(item: VXShopItem | undefined): number {
+  if (!item?.metadata) return 0;
+  try {
+    const n = JSON.parse(item.metadata)?.coins;
+    return typeof n === 'number' && n > 0 ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/** VX 코인 상점 — 실결제로 코인 구매. 상품은 Verse8 대시보드(VX Shop)에서 등록.
+ *  결제창은 VXShop.buyItem 이 띄우고, 결제 완료(onClose.purchased) 시 상품
+ *  metadata 의 coins 만큼 지급한다. onCoinsChanged 로 헤더 코인 표시를 갱신. */
+export function showVxShop(root: HTMLElement, onCoinsChanged: () => void): void {
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.innerHTML = `<div class="panel vx-panel"></div>`;
+  root.appendChild(overlay);
+  const panel = overlay.querySelector<HTMLDivElement>('.vx-panel')!;
+
+  const render = () => {
+    const st = VXShop.getState();
+    let body: string;
+    if (st.isLoading && st.items.length === 0) {
+      body = `<div class="vx-msg">${t('vxShopLoading')}</div>`;
+    } else if (st.items.length === 0) {
+      body = `<div class="vx-msg">${t('vxShopEmpty')}</div>`;
+    } else {
+      body = st.items
+        .map((it) => {
+          const coins = coinsFromItem(it);
+          const disabled = !it.purchasable ? 'disabled' : '';
+          return `
+            <div class="vx-item">
+              <div class="vx-item-info">
+                <span class="vx-item-name">${it.name}</span>
+                ${coins > 0 ? `<span class="vx-item-coins"><i class="coin-ic"></i> ${coins}</span>` : ''}
+              </div>
+              <button class="vx-buy-btn" data-buy="${it.productId}" ${disabled}>${it.price} VX</button>
+            </div>`;
+        })
+        .join('');
+    }
+    panel.innerHTML = `
+      <h2>${t('vxShopTitle')}</h2>
+      <div class="vx-list">${body}</div>
+      <div class="btns"><button class="primary" data-close>${t('closeBtn')}</button></div>
+    `;
+  };
+
+  const unsub = VXShop.subscribe(render);
+  const unOnClose = VXShop.onClose((p) => {
+    if (!p.purchased) return;
+    const coins = coinsFromItem(VXShop.getItem(p.productId));
+    if (coins > 0) {
+      store.coins += coins;
+      persist();
+      onCoinsChanged();
+      showToast(root, tf('vxThanks', { n: coins }));
+    }
+    void VXShop.refresh();
+  });
+
+  overlay.addEventListener('click', (e) => {
+    const tgt = e.target as HTMLElement;
+    const buy = tgt.closest('.vx-buy-btn') as HTMLElement | null;
+    if (buy && buy.dataset.buy) {
+      VXShop.buyItem(buy.dataset.buy);
+      return;
+    }
+    if (tgt.closest('[data-close]') || tgt === overlay) {
+      unsub();
+      unOnClose();
+      overlay.remove();
+    }
+  });
+
+  render();
+  void VXShop.refresh();
+}
+
 /** 잠깐 떴다 사라지는 토스트 메시지. 네이티브 alert() 대체 (런치 환경에서 확실히 표시). */
 function showToast(root: HTMLElement, message: string): void {
   const el = document.createElement('div');
@@ -114,6 +197,7 @@ export function showStageSelect(
       <div class="select-info" style="display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%;">
         <span class="coin"><i class="coin-ic"></i> ${store.coins}</span>
         <button class="lang-toggle-btn" aria-label="Language"></button>
+        <button class="icon-btn vx-shop-btn" style="font-size: 18px;" aria-label="${t('vxShopAria')}">💎</button>
         <button class="icon-btn shop-btn" style="font-size: 18px;" aria-label="${t('shopAria')}">🛍️</button>
         <button class="icon-btn rank-btn" style="font-size: 18px;" aria-label="Leaderboard">🏆</button>
         <button class="icon-btn settings-btn" aria-label="${t('settingsAria')}">⚙️</button>
@@ -223,6 +307,12 @@ export function showStageSelect(
     if (tgt.closest('.shop-btn')) {
       showShop(root, () => {
         showStageSelect(root, onPlay, onSettings);
+      });
+      return;
+    }
+    if (tgt.closest('.vx-shop-btn')) {
+      showVxShop(root, () => {
+        coinLabel.innerHTML = `<i class="coin-ic"></i> ${store.coins}`;
       });
       return;
     }

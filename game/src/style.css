@@ -755,7 +755,7 @@ body {
   box-shadow: 0 2px 0 rgba(107, 79, 42, 0.22);
 }
 /* 인게임 사운드(음소거) 버튼 — HUD 우측, 뒤로가기와 같은 크라프트 톤 */
-.sound-btn {
+.hud-settings-btn {
   font: 18px/1 system-ui;
   background: var(--kraft-deep);
   border: 2px solid var(--kraft-edge);
@@ -769,7 +769,7 @@ body {
   cursor: pointer;
   box-shadow: 0 2px 0 rgba(107, 79, 42, 0.22);
 }
-.sound-btn:active {
+.hud-settings-btn:active {
   transform: translateY(2px);
 }
 

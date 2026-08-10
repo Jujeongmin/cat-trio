@@ -3,7 +3,7 @@ import { catSprite, costumeSprite } from './assets';
 import { cellKey, reachableEmpty, isEscapable } from './escape';
 import { store, persist } from './storage';
 import { haptics } from './haptics';
-import { sfx } from './audio';
+import { sfx, toggleMute, isMuted } from './audio';
 import { t } from './i18n';
 import {
   VW,
@@ -189,7 +189,13 @@ export class Game {
 
     this.boardEl.addEventListener('click', this.onBoardClick);
     this.hudEl.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).closest('.back-btn')) this.onBack();
+      const tgt = e.target as HTMLElement;
+      if (tgt.closest('.back-btn')) this.onBack();
+      else if (tgt.closest('.sound-btn')) {
+        const m = toggleMute();
+        const b = this.hudEl.querySelector<HTMLButtonElement>('.sound-btn');
+        if (b) b.textContent = m ? '🔇' : '🔊';
+      }
     });
     this.renderHud();
     this.updateItemBar();
@@ -202,6 +208,7 @@ export class Game {
         <span class="hud-stage-label">STAGE</span><b class="hud-stage-num">${this.stage.id}</b>
       </div>
       <div class="hud-item hud-coin"><i class="coin-ic"></i><b>${store.coins}</b></div>
+      <button class="sound-btn" aria-label="sound">${isMuted() ? '🔇' : '🔊'}</button>
     `;
   }
 

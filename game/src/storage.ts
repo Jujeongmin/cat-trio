@@ -4,8 +4,8 @@ import { costumeCategory } from './assets';
 import { getGameServer } from './server';
 
 export interface Settings {
-  bgm: boolean;
-  sfx: boolean;
+  bgmVol: number; // 0..1 (0 = 끔)
+  sfxVol: number; // 0..1
   vibrate: boolean;
   lang: 'ko' | 'en';
 }
@@ -29,7 +29,7 @@ const DEFAULT: SaveData = {
   currentStage: 1,
   coins: 0,
   bestStars: {},
-  settings: { bgm: true, sfx: true, vibrate: true, lang: 'en' }, // 기본 언어: 영어
+  settings: { bgmVol: 0.6, sfxVol: 0.85, vibrate: true, lang: 'en' }, // 기본 언어: 영어
   tutorialDone: false,
   ownedCostumes: [],
   equippedClothes: {},
@@ -41,10 +41,15 @@ function read(): SaveData {
     const raw = localStorage.getItem(KEY);
     if (!raw) return structuredClone(DEFAULT);
     const parsed = JSON.parse(raw) as Partial<SaveData>;
+    // 구버전(bgm/sfx boolean) → 신버전(bgmVol/sfxVol number) 마이그레이션
+    const ps = (parsed.settings ?? {}) as Record<string, unknown>;
+    const migrated: Partial<Settings> = {};
+    if (typeof ps.bgmVol !== 'number' && typeof ps.bgm === 'boolean') migrated.bgmVol = ps.bgm ? 0.6 : 0;
+    if (typeof ps.sfxVol !== 'number' && typeof ps.sfx === 'boolean') migrated.sfxVol = ps.sfx ? 0.85 : 0;
     return {
       ...structuredClone(DEFAULT),
       ...parsed,
-      settings: { ...DEFAULT.settings, ...(parsed.settings ?? {}) },
+      settings: { ...DEFAULT.settings, ...(parsed.settings ?? {}), ...migrated },
       bestStars: { ...(parsed.bestStars ?? {}) },
       ownedCostumes: [...(parsed.ownedCostumes ?? [])],
       equippedClothes: { ...(parsed.equippedClothes ?? {}) },

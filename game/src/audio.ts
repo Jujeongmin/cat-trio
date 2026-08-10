@@ -71,13 +71,26 @@ function loadAssets() {
   });
 }
 
+// 런타임 음소거 (인게임 🔊 버튼용). 설정 볼륨과 별개로 세션 중 껐다 켜는 스위치.
+let muted = false;
+export function isMuted() {
+  return muted;
+}
+/** 음소거 토글 — BGM 은 즉시 멈추거나 다시 시작, SFX 는 재생 시점에 반영. 새 상태 반환. */
+export function toggleMute(): boolean {
+  muted = !muted;
+  if (muted) bgm.stop();
+  else if (store.settings.bgmVol > 0) bgm.start();
+  return muted;
+}
+
 /** 첫 사용자 제스처에서 호출 — 오디오 컨텍스트를 깨우고, 사운드를 로드하고,
- *  설정이 켜져 있으면 BGM 시작. */
+ *  BGM 볼륨이 0보다 크면 BGM 시작. */
 export function unlockAudio() {
   const c = getCtx();
   if (!c) return;
   loadAssets();
-  if (store.settings.bgm) bgm.start();
+  if (!muted && store.settings.bgmVol > 0) bgm.start();
 }
 
 // ---- 효과음 (SFX) ---------------------------------------------------------
@@ -144,7 +157,8 @@ const synthFallback: Record<SfxName, (c: AudioContext) => void> = {
 };
 
 function playSfx(name: SfxName) {
-  if (!store.settings.sfx) return;
+  const vol = store.settings.sfxVol;
+  if (muted || vol <= 0) return;
   const c = getCtx();
   if (!c) return;
   try {
@@ -153,7 +167,10 @@ function playSfx(name: SfxName) {
       // 버퍼 소스는 매번 새로 만들어 연타·겹침 재생이 자연스럽게 된다.
       const src = c.createBufferSource();
       src.buffer = buf;
-      src.connect(c.destination);
+      const gain = c.createGain();
+      gain.gain.value = vol; // 설정 효과음 볼륨 반영
+      src.connect(gain);
+      gain.connect(c.destination);
       src.start();
     } else {
       synthFallback[name](c); // 아직 로드 전이거나 로드 실패 → 합성음
@@ -231,7 +248,7 @@ function scheduleBgmIteration() {
 
 export const bgm = {
   start() {
-    if (!store.settings.bgm) return;
+    if (muted || store.settings.bgmVol <= 0) return;
     const c = getCtx();
     if (!c) return;
     const g = ensureBgmGain(c);
@@ -239,10 +256,27 @@ export const bgm = {
     bgmPlaying = true;
     g.gain.cancelScheduledValues(c.currentTime);
     g.gain.setValueAtTime(g.gain.value, c.currentTime);
-    g.gain.linearRampToValueAtTime(1, c.currentTime + 1.2); // 서서히 페이드인
+    g.gain.linearRampToValueAtTime(store.settings.bgmVol, c.currentTime + 1.2); // 설정 볼륨으로 페이드인
     if (bgmBuffer) startBgmFile(c);
     else if (bgmLoadFailed) scheduleBgmIteration(); // 파일 로드 실패 확정 시에만 폴백
     // 아직 로딩 중이면 여기선 아무것도 안 함 — 로드 콜백이 파일/폴백을 시작한다.
+  },
+  /** 설정 슬라이더용 — 재생 중이면 즉시 볼륨 반영, 0 이면 정지 / 0→양수면 시작. */
+  setVolume(v: number) {
+    if (v <= 0) {
+      bgm.stop();
+      return;
+    }
+    if (!bgmPlaying) {
+      bgm.start();
+      return;
+    }
+    const c = getCtx();
+    if (c && bgmGain) {
+      bgmGain.gain.cancelScheduledValues(c.currentTime);
+      bgmGain.gain.setValueAtTime(bgmGain.gain.value, c.currentTime);
+      bgmGain.gain.linearRampToValueAtTime(v, c.currentTime + 0.1);
+    }
   },
   stop() {
     bgmPlaying = false;

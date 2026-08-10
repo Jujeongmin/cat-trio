@@ -754,6 +754,25 @@ body {
   cursor: pointer;
   box-shadow: 0 2px 0 rgba(107, 79, 42, 0.22);
 }
+/* 인게임 사운드(음소거) 버튼 — HUD 우측, 뒤로가기와 같은 크라프트 톤 */
+.sound-btn {
+  font: 18px/1 system-ui;
+  background: var(--kraft-deep);
+  border: 2px solid var(--kraft-edge);
+  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 0 rgba(107, 79, 42, 0.22);
+}
+.sound-btn:active {
+  transform: translateY(2px);
+}
+
 /* 뜯어낸 박스 모서리 느낌의 작은 노치 — 순수 장식, 클릭 판정은 버튼 전체 */
 .back-btn::after {
   content: "";
@@ -1132,6 +1151,19 @@ body {
   justify-content: space-between;
   padding: 10px 4px;
   font-size: 17px;
+}
+/* 진동 등 토글 OFF 시 회색 처리로 꺼진 걸 시각적으로 표시 */
+.set-row.off {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+/* 볼륨 슬라이더 */
+.vol-slider {
+  flex: none;
+  width: 130px;
+  height: 6px;
+  accent-color: var(--accent);
+  cursor: pointer;
 }
 .switch {
   width: 52px;

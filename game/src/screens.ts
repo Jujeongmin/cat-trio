@@ -115,7 +115,6 @@ export function showVxShop(root: HTMLElement, onCoinsChanged: () => void): void 
           return `
             <div class="vx-item">
               <div class="vx-item-info">
-                <span class="vx-item-name">${it.name}</span>
                 ${coins > 0 ? `<span class="vx-item-coins"><i class="coin-ic"></i> ${coins}</span>` : ''}
               </div>
               <button class="vx-buy-btn" data-buy="${it.productId}" ${disabled}>${it.price} VX</button>
@@ -446,20 +445,24 @@ export function showSettings(root: HTMLElement, onReset: () => void, onClose: ()
   const overlay = document.createElement('div');
   overlay.className = 'overlay';
 
-  const toggle = (key: 'bgm' | 'sfx' | 'vibrate', label: string) => `
+  // 볼륨 슬라이더 행 (0~100%)
+  const slider = (key: 'bgmVol' | 'sfxVol', label: string) => `
     <div class="set-row">
       <span>${label}</span>
-      <button class="switch ${s[key] ? 'on' : ''}" data-toggle="${key}">
-        <i></i>
-      </button>
+      <input class="vol-slider" type="range" min="0" max="1" step="0.05" value="${s[key]}" data-vol="${key}" />
     </div>`;
 
   overlay.innerHTML = `
     <div class="panel settings-panel">
       <h2>${t('settingsTitle')}</h2>
-      ${toggle('bgm', t('bgmLabel'))}
-      ${toggle('sfx', t('sfxLabel'))}
-      ${toggle('vibrate', t('vibrateLabel'))}
+      ${slider('bgmVol', t('bgmLabel'))}
+      ${slider('sfxVol', t('sfxLabel'))}
+      <div class="set-row ${s.vibrate ? '' : 'off'}" data-vibrate-row>
+        <span>${t('vibrateLabel')}</span>
+        <button class="switch ${s.vibrate ? 'on' : ''}" data-toggle="vibrate">
+          <i></i>
+        </button>
+      </div>
       <div class="set-row">
         <span>${t('languageLabel')}</span>
         <button class="lang-btn" data-lang>${s.lang === 'ko' ? t('langKorean') : t('langEnglish')}</button>
@@ -469,15 +472,25 @@ export function showSettings(root: HTMLElement, onReset: () => void, onClose: ()
     </div>
   `;
 
+  // 볼륨 슬라이더 — input 이벤트로 실시간 반영
+  overlay.querySelectorAll<HTMLInputElement>('[data-vol]').forEach((el) => {
+    el.addEventListener('input', () => {
+      const key = el.dataset.vol as 'bgmVol' | 'sfxVol';
+      const v = Number(el.value);
+      store.settings[key] = v;
+      persist();
+      if (key === 'bgmVol') bgm.setVolume(v);
+    });
+  });
+
   overlay.addEventListener('click', (e) => {
     const tgt = e.target as HTMLElement;
     const toggleBtn = tgt.closest('[data-toggle]') as HTMLElement | null;
     if (toggleBtn) {
-      const key = toggleBtn.dataset.toggle as 'bgm' | 'sfx' | 'vibrate';
-      store.settings[key] = !store.settings[key];
-      toggleBtn.classList.toggle('on', store.settings[key]);
+      store.settings.vibrate = !store.settings.vibrate;
+      toggleBtn.classList.toggle('on', store.settings.vibrate);
+      toggleBtn.closest('.set-row')?.classList.toggle('off', !store.settings.vibrate);
       persist();
-      if (key === 'bgm') (store.settings.bgm ? bgm.start() : bgm.stop());
       return;
     }
     if (tgt.closest('[data-lang]')) {

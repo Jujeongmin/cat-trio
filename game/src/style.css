@@ -755,7 +755,12 @@ body {
   box-shadow: 0 2px 0 rgba(107, 79, 42, 0.22);
 }
 /* 인게임 사운드(음소거) 버튼 — HUD 우측, 뒤로가기와 같은 크라프트 톤 */
+/* 설정 버튼 — flex 흐름에서 빼 절대배치. back·stage·coin 3칸이 원래대로
+   좌상단·중앙상단·우상단을 차지하게 두고, ⚙️는 back(‹) 오른쪽 빈 공간에. */
 .hud-settings-btn {
+  position: absolute;
+  top: 16px;
+  left: 64px;
   font: 18px/1 system-ui;
   background: var(--kraft-deep);
   border: 2px solid var(--kraft-edge);

@@ -22,8 +22,8 @@ const dict = {
   adDoubleClaimed: { ko: '✓ 코인 2배 받음', en: '✓ Coins doubled' },
 
   settingsTitle: { ko: '설정', en: 'Settings' },
-  bgmLabel: { ko: '🎵 배경음악', en: '🎵 Music' },
-  sfxLabel: { ko: '🔊 효과음', en: '🔊 Sound' },
+  bgmLabel: { ko: '🎵 배경음악', en: '🎵 BGM' },
+  sfxLabel: { ko: '🔊 효과음', en: '🔊 SFX' },
   vibrateLabel: { ko: '📳 진동', en: '📳 Vibration' },
   languageLabel: { ko: '🌐 언어', en: '🌐 Language' },
   langKorean: { ko: '한국어', en: '한국어' },

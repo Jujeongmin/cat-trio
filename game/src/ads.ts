@@ -93,7 +93,7 @@ export async function playRewardedAd(
   ensureInit();
 
   try {
-    const result = await Verse8Ads.showRewarded({ placementId, timeoutMs: 120_000 });
+    const result = await Verse8Ads.showRewarded({ placementId, timeoutMs: 300_000 });
 
     switch (result.status) {
       case 'rewarded':

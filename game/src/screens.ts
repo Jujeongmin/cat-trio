@@ -2,7 +2,7 @@ import { store, persist, buyCostume, equipCostume, unequipCostume } from './stor
 import { GameResult } from './types';
 import { bgm } from './audio';
 import { claimRewardedAd } from './ads';
-import { t, tf, applyDocumentLang } from './i18n';
+import { t, tf, applyDocumentLang, nextLang, LANG_CODE, LANG_NAME } from './i18n';
 import { connectGameServer } from './server';
 import { VXShop, type VXShopItem } from '@verse8/platform/vanilla';
 import {
@@ -263,7 +263,7 @@ export function showStageSelect(
   // 언어 전환 시 화면에 보이는 모든 텍스트를 즉시 다시 그린다
   function applyLang() {
     titleEl.textContent = t('gameTitle');
-    langBtn.textContent = store.settings.lang === 'ko' ? 'EN' : 'KO';
+    langBtn.textContent = LANG_CODE[store.settings.lang];
     settingsBtn.setAttribute('aria-label', t('settingsAria'));
     prevBtn.setAttribute('aria-label', t('prevStageAria'));
     nextBtn.setAttribute('aria-label', t('nextStageAria'));
@@ -316,7 +316,7 @@ export function showStageSelect(
       return;
     }
     if (tgt.closest('.lang-toggle-btn')) {
-      store.settings.lang = store.settings.lang === 'ko' ? 'en' : 'ko';
+      store.settings.lang = nextLang(store.settings.lang);
       persist();
       applyDocumentLang();
       applyLang();
@@ -465,7 +465,7 @@ export function showSettings(root: HTMLElement, onReset: () => void, onClose: ()
       </div>
       <div class="set-row">
         <span>${t('languageLabel')}</span>
-        <button class="lang-btn" data-lang>${s.lang === 'ko' ? t('langKorean') : t('langEnglish')}</button>
+        <button class="lang-btn" data-lang>${LANG_NAME[s.lang]}</button>
       </div>
       <button class="danger" data-reset>${t('resetBtn')}</button>
       <div class="btns"><button class="primary" data-close>${t('closeBtn')}</button></div>
@@ -494,7 +494,7 @@ export function showSettings(root: HTMLElement, onReset: () => void, onClose: ()
       return;
     }
     if (tgt.closest('[data-lang]')) {
-      store.settings.lang = store.settings.lang === 'ko' ? 'en' : 'ko';
+      store.settings.lang = nextLang(store.settings.lang);
       persist();
       applyDocumentLang();
       overlay.remove();

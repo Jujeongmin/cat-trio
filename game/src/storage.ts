@@ -7,7 +7,7 @@ export interface Settings {
   bgmVol: number; // 0..1 (0 = 끔)
   sfxVol: number; // 0..1
   vibrate: boolean;
-  lang: 'ko' | 'en';
+  lang: 'ko' | 'en' | 'ja' | 'zh';
 }
 
 export interface SaveData {

@@ -926,6 +926,19 @@ body {
   justify-content: center;
   cursor: pointer;
 }
+/* 네비 버튼 SVG 아이콘 (💎🛍️🏆⚙️ 대체) */
+.nav-ic {
+  width: clamp(20px, 5.6cqw, 26px);
+  height: clamp(20px, 5.6cqw, 26px);
+  display: block;
+  pointer-events: none;
+}
+/* 타이틀 발바닥 아이콘 (🐾 대체) */
+.title-paw {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
 
 /* 메인 화면 빠른 언어 전환 버튼 (EN/KO) */
 .lang-toggle-btn {
@@ -1360,6 +1373,12 @@ body {
 }
 .ad-free-ic {
   font-size: 15px;
+}
+/* 광고 버튼 필름 아이콘이 img 인 경우 (메인화면 🎬 대체) */
+img.ad-free-ic {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 .ad-double-btn {

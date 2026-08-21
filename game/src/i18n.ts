@@ -101,7 +101,7 @@ const dict = {
   },
   adCloseAria: { ko: '닫기', en: 'Close', ja: '閉じる', zh: '關閉' },
 
-  gameTitle: { ko: '🐾 캣 트리오', en: '🐾 Cat Trio', ja: '🐾 キャットトリオ', zh: '🐾 貓咪三重奏' },
+  gameTitle: { ko: '캣 트리오', en: 'Cat Trio', ja: 'キャットトリオ', zh: '貓咪三重奏' },
   rankTitle: {
     ko: '🏆 캣 트리오 랭킹',
     en: '🏆 Cat Trio Rankings',

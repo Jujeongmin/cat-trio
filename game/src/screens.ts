@@ -190,16 +190,21 @@ export function showStageSelect(
   const clampStage = (n: number) => Math.max(1, Math.min(maxTile, n));
   let cur = clampStage(store.currentStage || 1);
 
+  // 아이콘 SVG 에셋 경로 (iframe 서브패스 임베드에서도 절대 URL 로 해결)
+  const iconUrl = (n: string) => new URL(`icons/${n}.svg`, window.location.href).href;
+
   screen.innerHTML = `
     <header class="select-top" style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 12px; width: 100%;">
-      <h1 style="margin: 0; font-size: 32px; font-weight: 900; text-align: center; letter-spacing: -0.02em;">${t('gameTitle')}</h1>
+      <h1 style="margin: 0; font-size: 32px; font-weight: 900; text-align: center; letter-spacing: -0.02em; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <img class="title-paw" src="${iconUrl('paw')}" alt="" /><span class="title-name">${t('gameTitle')}</span>
+      </h1>
       <div class="select-info" style="display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%;">
         <span class="coin"><i class="coin-ic"></i> ${store.coins}</span>
         <button class="lang-toggle-btn" aria-label="Language"></button>
-        <button class="icon-btn vx-shop-btn" style="font-size: 18px;" aria-label="${t('vxShopAria')}">💎</button>
-        <button class="icon-btn shop-btn" style="font-size: 18px;" aria-label="${t('shopAria')}">🛍️</button>
-        <button class="icon-btn rank-btn" style="font-size: 18px;" aria-label="Leaderboard">🏆</button>
-        <button class="icon-btn settings-btn" aria-label="${t('settingsAria')}">⚙️</button>
+        <button class="icon-btn vx-shop-btn" aria-label="${t('vxShopAria')}"><img class="nav-ic" src="${iconUrl('gem')}" alt="" /></button>
+        <button class="icon-btn shop-btn" aria-label="${t('shopAria')}"><img class="nav-ic" src="${iconUrl('bag')}" alt="" /></button>
+        <button class="icon-btn rank-btn" aria-label="Leaderboard"><img class="nav-ic" src="${iconUrl('trophy')}" alt="" /></button>
+        <button class="icon-btn settings-btn" aria-label="${t('settingsAria')}"><img class="nav-ic" src="${iconUrl('gear')}" alt="" /></button>
       </div>
     </header>
     <button class="ad-free-btn"></button>
@@ -262,12 +267,12 @@ export function showStageSelect(
 
   // 언어 전환 시 화면에 보이는 모든 텍스트를 즉시 다시 그린다
   function applyLang() {
-    titleEl.textContent = t('gameTitle');
+    titleEl.querySelector('.title-name')!.textContent = t('gameTitle');
     langBtn.textContent = LANG_CODE[store.settings.lang];
     settingsBtn.setAttribute('aria-label', t('settingsAria'));
     prevBtn.setAttribute('aria-label', t('prevStageAria'));
     nextBtn.setAttribute('aria-label', t('nextStageAria'));
-    adBtn.innerHTML = `<span class="ad-free-ic">🎬</span> ${tf('freeAdBtn', {
+    adBtn.innerHTML = `<img class="ad-free-ic" src="${iconUrl('film')}" alt="" /> ${tf('freeAdBtn', {
       icon: '<i class="coin-ic"></i>',
       n: FREE_AD_COINS,
     })}`;

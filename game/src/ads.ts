@@ -93,7 +93,8 @@ export async function playRewardedAd(
   ensureInit();
 
   try {
-    const result = await Verse8Ads.showRewarded({ placementId, timeoutMs: 300_000 });
+    // 타임아웃 없음 — 호스트가 응답할 때까지 무한정 대기
+    const result = await Verse8Ads.showRewarded({ placementId });
 
     switch (result.status) {
       case 'rewarded':

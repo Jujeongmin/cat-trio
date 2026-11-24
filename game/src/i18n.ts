@@ -156,7 +156,7 @@ const dict = {
   },
 
   shopAria: { ko: '상점', en: 'Shop', ja: 'ショップ', zh: '商店' },
-  shopTitle: { ko: '🛍️ 코스튬 상점', en: '🛍️ Costume Shop', ja: '🛍️ コスチュームショップ', zh: '🛍️ 服裝商店' },
+  shopTitle: { ko: '코스튬 상점', en: 'Costume Shop', ja: 'コスチュームショップ', zh: '服裝商店' },
   shopTypeTitle: { ko: '고양이 {n}', en: 'Cat {n}', ja: 'ねこ {n}', zh: '貓咪 {n}' },
   shopEquippedLabel: { ko: '장착중', en: 'Equipped', ja: '装着中', zh: '已裝備' },
   shopNotEnoughCoins: { ko: '코인이 부족해요', en: 'Not enough coins', ja: 'コインが足りません', zh: '金幣不足' },

@@ -1,11 +1,12 @@
 import { CatPlacement, StageData, GameResult } from './types';
-import { catSprite, costumeSprite } from './assets';
+import { lookLayers, FRAME, framePos, LAYER_BOX, LAYER_BG_SIZE } from './assets';
 import { cellKey, reachableEmpty, isEscapable } from './escape';
 import { store, persist, resetSave } from './storage';
 import { haptics } from './haptics';
 import { sfx } from './audio';
 import { showSettings } from './screens';
 import { t } from './i18n';
+import { wait } from './wait';
 import {
   VW,
   VH,
@@ -13,6 +14,10 @@ import {
   CELL_BOX,
   SLOT_Y,
   MAX_CAPACITY,
+  pickLayout,
+  setLayout,
+  layoutMode,
+  refreshBoardOffset,
   gridX,
   gridY,
   setBoardRowSpan,
@@ -20,6 +25,8 @@ import {
   slotBoxSize,
   slotCatSize,
 } from './layout';
+
+const uiIcon = (n: string) => new URL(`ui/ic-${n}.png`, window.location.href).href;
 
 // 아이템 가격(코인)
 const ITEM_COST = { shuffle: 30, undo: 40, slotPlus: 60 } as const;
@@ -30,10 +37,8 @@ interface SlotCat {
   type: number;
 }
 
-const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 // 스프라이트 시트 정면 정자세 = (0행, 1열)
-const DIR = { down: 0, left: 1, right: 2, up: 3 } as const;
 
 const timeLimitFor = (stage: StageData) => {
   const queued = stage.spawners.reduce((n, s) => n + s.queue.length, 0);
@@ -65,11 +70,14 @@ export class Game {
   private slotPlusUsed = false; // 슬롯+1은 스테이지당 1회만
   private over = false;
   private inFlight = 0; // 진행 중인 select() 애니메이션 수 — 아이템 버튼 잠금용
+  private relayoutPending = false; // 배치 전환을 연출·튜토리얼 뒤로 미뤘나
 
   private limitMs: number;
   private startTime = 0;
   private stars = 3;
   private timerId = 0;
+  private timerRunning = false; // 튜토리얼 중엔 아직 안 돌고 있다
+  private hostPausedAt = 0; // 호스트가 접은 시각 (0 = 안 접힘)
 
   private barStars: HTMLElement[] = [];
   private readonly starThresholds = [2 / 3, 1 / 3, 0];
@@ -108,6 +116,7 @@ export class Game {
     }));
     this.limitMs = timeLimitFor(stage);
     // 실제 고양이/파이프가 놓인 행 범위를 화면 세로 중앙에 맞춘다 (gridY 오프셋)
+    setLayout(pickLayout(window.innerWidth, window.innerHeight));
     const rowsUsed = [...this.cats.map((c) => c.row), ...this.spawners.map((s) => s.row)];
     setBoardRowSpan(Math.min(...rowsUsed), Math.max(...rowsUsed));
     this.build();
@@ -124,10 +133,28 @@ export class Game {
 
   private startTimer() {
     this.startTime = performance.now();
+    this.timerRunning = true;
     this.timerId = window.setInterval(this.tick, 100);
   }
 
+  /** 플랫폼(광고 중)가 게임을 접었다 — 게임 루프를 멎게 하고 시계를 세운다. */
+  pauseHost() {
+    if (this.hostPausedAt) return;
+    this.hostPausedAt = performance.now();
+    clearInterval(this.timerId);
+    this.timerId = 0;
+  }
+
+  /** 복귀 — 접혀 있던 만큼 시작 시각을 밀어 남은 시간을 그대로 되살린다. */
+  resumeHost() {
+    if (!this.hostPausedAt) return;
+    this.startTime += performance.now() - this.hostPausedAt;
+    this.hostPausedAt = 0;
+    if (this.timerRunning && !this.over) this.timerId = window.setInterval(this.tick, 100);
+  }
+
   destroy() {
+    this.timerRunning = false;
     clearInterval(this.timerId);
     window.removeEventListener('resize', this.fitScale);
     this.root.innerHTML = '';
@@ -138,8 +165,9 @@ export class Game {
     this.root.innerHTML = '';
     const wrap = document.createElement('div');
     wrap.className = 'wrap';
-    wrap.style.width = `${VW}px`;
-    wrap.style.height = `${VH}px`;
+    wrap.style.width = `${VW()}px`;
+    wrap.style.height = `${VH()}px`;
+    wrap.classList.toggle('land', layoutMode() === 'landscape');
 
     this.hudEl = document.createElement('div');
     this.hudEl.className = 'hud';
@@ -149,7 +177,8 @@ export class Game {
     this.barEl.innerHTML =
       '<i></i>' +
       this.starThresholds
-        .map((t) => `<span class="bar-star" style="left:${Math.max(3, t * 100)}%">★</span>`)
+        // 파라미터 이름을 t 로 두면 전역 t()(i18n)를 가린다 — 런타임에만 터지는 종류다.
+        .map((th) => `<span class="bar-star" style="left:${Math.max(3, th * 100)}%">★</span>`)
         .join('');
     this.barStars = Array.from(this.barEl.querySelectorAll<HTMLElement>('.bar-star'));
 
@@ -164,15 +193,15 @@ export class Game {
     this.itemsEl.className = 'itembar';
     this.itemsEl.innerHTML = `
       <button class="item-btn" data-item="shuffle">
-        <span class="item-ic">🔀</span><span class="item-label">${t('shuffleLabel')}</span>
+        <img class="item-ic" src="${uiIcon('shuffle')}" alt="" /><span class="item-label">${t('shuffleLabel')}</span>
         <span class="item-cost"><i class="coin-ic"></i>${ITEM_COST.shuffle}</span>
       </button>
       <button class="item-btn" data-item="undo">
-        <span class="item-ic">↩️</span><span class="item-label">${t('undoLabel')}</span>
+        <img class="item-ic" src="${uiIcon('undo')}" alt="" /><span class="item-label">${t('undoLabel')}</span>
         <span class="item-cost"><i class="coin-ic"></i>${ITEM_COST.undo}</span>
       </button>
       <button class="item-btn" data-item="slotplus">
-        <span class="item-ic">➕</span><span class="item-label">${t('slotPlusLabel')}</span>
+        <img class="item-ic" src="${uiIcon('slotplus')}" alt="" /><span class="item-label">${t('slotPlusLabel')}</span>
         <span class="item-cost"><i class="coin-ic"></i>${ITEM_COST.slotPlus}</span>
       </button>
     `;
@@ -210,12 +239,12 @@ export class Game {
 
   private renderHud() {
     this.hudEl.innerHTML = `
-      <button class="back-btn" aria-label="${t('backAria')}">‹</button>
+      <button class="back-btn" aria-label="${t('backAria')}"><img src="${uiIcon('back')}" alt="" /></button>
       <div class="hud-item hud-stage">
         <span class="hud-stage-label">STAGE</span><b class="hud-stage-num">${this.stage.id}</b>
       </div>
       <div class="hud-item hud-coin"><i class="coin-ic"></i><b>${store.coins}</b></div>
-      <button class="hud-settings-btn" aria-label="settings">⚙️</button>
+      <button class="hud-settings-btn" aria-label="settings"><img src="${uiIcon('gear')}" alt="" /></button>
     `;
   }
 
@@ -229,7 +258,7 @@ export class Game {
       cell.style.width = `${box}px`;
       cell.style.height = `${box}px`;
       cell.style.left = `${slotCenterX(i, this.capacity) - box / 2}px`;
-      cell.style.top = `${SLOT_Y - box / 2}px`;
+      cell.style.top = `${SLOT_Y() - box / 2}px`;
       this.slotEl.appendChild(cell);
     }
   }
@@ -256,7 +285,10 @@ export class Game {
   private fitScale = () => {
     const parentWidth = this.root.clientWidth || window.innerWidth;
     const parentHeight = this.root.clientHeight || window.innerHeight;
-    const s = Math.min(parentWidth / VW, parentHeight / VH);
+    // 창 비율이 바뀌어 세로↔가로 배치가 달라지면 진행 상태를 그대로 둔 채 다시 놓는다.
+    const want = pickLayout(window.innerWidth, window.innerHeight);
+    if (want !== layoutMode()) this.relayout(want);
+    const s = Math.min(parentWidth / VW(), parentHeight / VH());
     this.wrap.style.transform = `translate(-50%, -50%) scale(${s})`;
   };
 
@@ -264,8 +296,8 @@ export class Game {
   // 프레임 위치를 각 .cat-layer 자식에 background-position "shorthand" 로 직접 지정.
   // (background-position-x/y 개별 longhand·CSS 변수는 일부 웹뷰에서 안 먹어
   //  뒤 레이어가 렌더 안 되는 원인이 되므로 shorthand·인라인만 사용한다.)
-  private setFrame(el: HTMLElement, col: number, row: number) {
-    const pos = `${col * 50}% ${(row * 100) / 3}%`;
+  private setFrame(el: HTMLElement, frame: number) {
+    const pos = framePos(frame);
     el.dataset.pos = pos; // applyLayers 가 레이어 재생성 시 재사용
     for (const child of el.children) {
       if (child.classList.contains('cat-layer')) {
@@ -383,7 +415,49 @@ export class Game {
     }
 
     // 7) 고양이 (한 칸에 하나, 겹치지 않음)
-    for (const c of this.cats) this.makeCatEl(c);
+    for (const c of this.cats) if (c.present) this.makeCatEl(c);
+  }
+
+  /**
+   * 세로↔가로 배치 전환. 판 상태(남은 고양이·슬롯·시계)는 그대로 두고 화면만 새로 짓는다.
+   * 연출 중이거나 튜토리얼 중이면 끝난 뒤로 미룬다 (fitScale 이 다시 부른다).
+   */
+  private relayout(mode: 'portrait' | 'landscape') {
+    if (this.inFlight > 0 || this.tutorial || this.over) {
+      this.relayoutPending = true;
+      return;
+    }
+    this.relayoutPending = false;
+    setLayout(mode);
+    refreshBoardOffset();
+    this.els.clear();
+    this.build();
+    this.renderBoard();
+    for (const sc of this.slots) {
+      const cat = this.cats.find((c) => c.id === sc.id);
+      if (!cat) continue;
+      const el = this.makeCatEl(cat);
+      el.classList.add('inslot');
+      el.style.zIndex = '1000';
+    }
+    this.moveSlotsInstant();
+    this.computeEscapable();
+    this.tick();
+  }
+
+  /** 슬롯 고양이를 애니메이션 없이 제자리에 놓는다 (배치 전환용). */
+  private moveSlotsInstant() {
+    const catSize = slotCatSize(this.capacity);
+    this.slots.forEach((s, i) => {
+      const el = this.els.get(s.id);
+      if (!el) return;
+      el.style.transition = 'none';
+      el.style.width = `${catSize}px`;
+      el.style.height = `${catSize}px`;
+      this.placeAt(el, slotCenterX(i, this.capacity), SLOT_Y(), catSize);
+      void el.offsetWidth;
+      el.style.transition = '';
+    });
   }
 
   // 고양이 스프라이트 + 착용물을 각각 별도의 자식 레이어(.cat-layer)로 쌓는다.
@@ -394,12 +468,11 @@ export class Game {
   // 대비한다.
   private applyLayers(el: HTMLElement, type: number) {
     el.textContent = '';
-    const pos = el.dataset.pos || '50% 0%';
-    const urls = [catSprite(type)];
-    const clothes = store.equippedClothes[type];
-    const hat = store.equippedHats[type];
-    if (clothes !== undefined) urls.push(costumeSprite(clothes));
-    if (hat !== undefined) urls.push(costumeSprite(hat));
+    el.dataset.type = String(type); // 녹화 스크립트·디버그가 종류를 읽는다
+    const pos = el.dataset.pos || framePos(FRAME.idle);
+    const urls = lookLayers(type, store.equippedClothes[type], store.equippedHats[type]);
+    // 대기 중 눈 깜빡임(CSS blink)이 고양이마다 다른 박자로 오도록 지연을 흩뜨린다.
+    const blinkDelay = `${-(Math.random() * 5).toFixed(2)}s`;
     for (const u of urls) {
       const layer = document.createElement('div');
       layer.className = 'cat-layer';
@@ -407,15 +480,16 @@ export class Game {
       // 지원 여부와 무관하게 어떤 런타임에서도 겹침이 깨지지 않도록.
       const s = layer.style;
       s.position = 'absolute';
-      s.top = '0';
-      s.left = '0';
-      s.width = '100%';
-      s.height = '100%';
+      s.top = LAYER_BOX.top;
+      s.left = LAYER_BOX.left;
+      s.width = LAYER_BOX.width;
+      s.height = LAYER_BOX.height;
       s.backgroundImage = `url(${u})`;
       s.backgroundRepeat = 'no-repeat';
-      s.backgroundSize = '300% 400%';
+      s.backgroundSize = LAYER_BG_SIZE;
       s.backgroundPosition = pos;
       s.imageRendering = 'pixelated';
+      s.animationDelay = blinkDelay;
       el.appendChild(layer);
     }
   }
@@ -428,7 +502,7 @@ export class Game {
     el.style.width = `${CELL}px`;
     el.style.height = `${CELL}px`;
     el.style.zIndex = '5';
-    this.setFrame(el, 1, DIR.down);
+    this.setFrame(el, FRAME.idle);
     this.placeAt(el, gridX(cat.col, this.stage.cols), gridY(cat.row), CELL);
     this.boardEl.appendChild(el);
     this.els.set(cat.id, el);
@@ -508,7 +582,7 @@ export class Game {
 
     const hand = document.createElement('div');
     hand.className = 'tut-hand';
-    hand.textContent = '👆';
+    hand.innerHTML = `<img src="${uiIcon('paw')}" alt="" />`;
     this.tutHandEl = hand;
 
     const msg = document.createElement('div');
@@ -563,6 +637,7 @@ export class Game {
     this.tutHandEl = null;
     this.tutMsgEl = null;
     this.startTimer(); // 이제부터 시간 흐름
+    if (this.relayoutPending) this.fitScale();
   }
 
   private nearestExit(cat: BoardCat) {
@@ -629,7 +704,7 @@ export class Game {
       // 슬롯까지 이동하는 동안에도 계속 걷게 두고, 도착 후에 걷기를 멈춘다.
       await this.moveToSlots();
       el.classList.remove('walk');
-      this.setFrame(el, 1, DIR.down);
+      this.setFrame(el, FRAME.idle);
 
       const matched = this.resolveMatches();
 
@@ -645,6 +720,7 @@ export class Game {
     } finally {
       this.inFlight--;
       this.updateItemBar();
+      if (this.relayoutPending && this.inFlight === 0) this.fitScale();
     }
   }
 
@@ -656,7 +732,7 @@ export class Game {
       el.classList.add('inslot');
       el.style.width = `${catSize}px`;
       el.style.height = `${catSize}px`;
-      this.placeAt(el, slotCenterX(i, this.capacity), SLOT_Y, catSize);
+      this.placeAt(el, slotCenterX(i, this.capacity), SLOT_Y(), catSize);
     });
     await wait(560);
   }
@@ -689,15 +765,46 @@ export class Game {
     return true;
   }
 
+  private burstAt(el: HTMLElement) {
+    const cx = el.offsetLeft + el.offsetWidth / 2;
+    const cy = el.offsetTop + el.offsetHeight / 2;
+    const kinds = ['sparkle', 'heart', 'star', 'sparkle', 'paw', 'sparkle', 'heart', 'star'];
+    kinds.forEach((k, i) => {
+      const p = document.createElement('img');
+      p.className = 'burst';
+      p.src = uiIcon(k);
+      const ang = (i / kinds.length) * Math.PI * 2 + Math.random() * 0.4;
+      const dist = 70 + Math.random() * 50;
+      p.style.left = `${cx}px`;
+      p.style.top = `${cy}px`;
+      p.style.setProperty('--dx', `${Math.cos(ang) * dist}px`);
+      p.style.setProperty('--dy', `${Math.sin(ang) * dist - 30}px`);
+      p.style.setProperty('--rot', `${(Math.random() - 0.5) * 120}deg`);
+      p.addEventListener('animationend', () => p.remove(), { once: true });
+      this.wrap.appendChild(p);
+    });
+  }
+
   private repositionSlots() {
     const catSize = slotCatSize(this.capacity);
     this.slots.forEach((s, i) => {
       const el = this.els.get(s.id);
-      if (el) this.placeAt(el, slotCenterX(i, this.capacity), SLOT_Y, catSize);
+      if (el) this.placeAt(el, slotCenterX(i, this.capacity), SLOT_Y(), catSize);
     });
   }
 
   private async playMatchAnim(ids: string[]) {
+    // 셋이 모이면 먼저 활짝 웃으며 한 번 뛰고, 그다음 돌면서 사라진다.
+    for (const id of ids) {
+      const el = this.els.get(id);
+      if (!el) continue;
+      this.setFrame(el, FRAME.happy);
+      el.classList.add('cheer');
+    }
+    // 가운데 고양이 자리에서 반짝이·하트·별 그림이 터진다 (그림 에셋, 코드 도형 아님)
+    const mid = this.els.get(ids[1]);
+    if (mid) this.burstAt(mid);
+    await wait(300);
     for (const id of ids) this.els.get(id)?.classList.add('spin');
     await wait(520);
     for (const id of ids) {
@@ -785,7 +892,7 @@ export class Game {
     el.style.zIndex = '5';
     this.applyLayers(el, cat.type);
     this.placeAt(el, gridX(cat.col, this.stage.cols), gridY(cat.row), CELL);
-    this.setFrame(el, 1, DIR.down);
+    this.setFrame(el, FRAME.idle);
 
     this.computeEscapable();
     this.renderHud();
@@ -814,6 +921,7 @@ export class Game {
     if (this.over) return;
     this.over = true;
     this.updateItemBar();
+    this.timerRunning = false;
     clearInterval(this.timerId);
     win ? haptics.win() : haptics.lose();
     win ? sfx.win() : sfx.lose();

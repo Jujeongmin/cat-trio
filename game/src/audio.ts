@@ -21,10 +21,11 @@ const soundUrl = (p: string) => new URL(p, window.location.href).href;
 
 // ---- 오디오 파일 로딩 (버퍼) ----------------------------------------------
 const SFX_FILES = {
-  tap: 'sfx/Click.mp3',
-  match: 'sfx/Match.mp3',
-  win: 'sfx/Win.mp3',
-  lose: 'sfx/Lose.mp3',
+  // PixelLab 효과음 (2026-11-24). 파일명 _v2: 같은 경로 교체는 CDN 캐시가 옛 파일을 준다.
+  tap: 'sfx/tap_v2.mp3',
+  match: 'sfx/match_v2.mp3',
+  win: 'sfx/win_v2.mp3',
+  lose: 'sfx/lose_v2.mp3',
 } as const;
 type SfxName = keyof typeof SFX_FILES;
 
@@ -53,20 +54,13 @@ function loadAssets() {
       if (b) sfxBuffers[k] = b;
     });
   });
-  void decodeAudio(soundUrl('bgm/BGM.mp3')).then((b) => {
+  void decodeAudio(soundUrl(BGM_FILE)).then((b) => {
     const c = getCtx();
     if (b) {
       bgmBuffer = b;
       // BGM 이 켜진 상태로 파일 로드를 기다리고 있었으면 지금 파일 루프 시작.
       // (합성음 폴백이 돌고 있었다면 그걸 끄고 파일로 전환)
-      if (bgmPlaying && !bgmSource && c) {
-        clearTimeout(bgmTimer);
-        startBgmFile(c);
-      }
-    } else {
-      // 파일 로드 실패 → 이제야 합성음 폴백으로 BGM 시작.
-      bgmLoadFailed = true;
-      if (bgmPlaying && !bgmSource) scheduleBgmIteration();
+      if (bgmPlaying && !bgmSource && c) startBgmFile(c);
     }
   });
 }
@@ -94,67 +88,7 @@ export function unlockAudio() {
 }
 
 // ---- 효과음 (SFX) ---------------------------------------------------------
-// 합성음 폴백 — 파일 버퍼가 준비되기 전/실패 시 사용.
-function tone(
-  freq: number,
-  start: number,
-  dur: number,
-  opts: { type?: OscillatorType; peak?: number; attack?: number } = {},
-) {
-  const c = getCtx();
-  if (!c) return;
-  const { type = 'sine', peak = 0.15, attack = 0.02 } = opts;
-  const osc = c.createOscillator();
-  const gain = c.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, start);
-  gain.gain.setValueAtTime(0.0001, start);
-  gain.gain.linearRampToValueAtTime(peak, start + attack);
-  gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
-  osc.connect(gain);
-  gain.connect(c.destination);
-  osc.start(start);
-  osc.stop(start + dur + 0.02);
-}
-
-const synthFallback: Record<SfxName, (c: AudioContext) => void> = {
-  // 고양이 선택 — 짧고 통통 튀는 팝
-  tap: (c) => {
-    const now = c.currentTime;
-    const osc = c.createOscillator();
-    const gain = c.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(520, now);
-    osc.frequency.exponentialRampToValueAtTime(220, now + 0.08);
-    gain.gain.setValueAtTime(0.14, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
-    osc.connect(gain);
-    gain.connect(c.destination);
-    osc.start(now);
-    osc.stop(now + 0.1);
-  },
-  // 3매치 완성 — 반짝이는 3음 코드
-  match: (c) => {
-    const now = c.currentTime;
-    [523.25, 659.25, 783.99].forEach((f, i) =>
-      tone(f, now + i * 0.06, 0.24, { type: 'triangle', peak: 0.11 }),
-    );
-  },
-  // 스테이지 클리어 — 상승 아르페지오 팡파르
-  win: (c) => {
-    const now = c.currentTime;
-    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>
-      tone(f, now + i * 0.12, 0.42, { type: 'sine', peak: 0.13, attack: 0.03 }),
-    );
-  },
-  // 게임 오버 — 아래로 처지는 슬픈 진행
-  lose: (c) => {
-    const now = c.currentTime;
-    [392.0, 349.23, 311.13, 261.63].forEach((f, i) =>
-      tone(f, now + i * 0.17, 0.42, { type: 'triangle', peak: 0.09 }),
-    );
-  },
-};
+// 합성음(오실레이터) 폴백은 쓰지 않는다 — 파일이 아직 안 받아졌으면 그 소리는 건너뛴다.
 
 function playSfx(name: SfxName) {
   const vol = store.settings.sfxVol;
@@ -172,8 +106,6 @@ function playSfx(name: SfxName) {
       src.connect(gain);
       gain.connect(c.destination);
       src.start();
-    } else {
-      synthFallback[name](c); // 아직 로드 전이거나 로드 실패 → 합성음
     }
   } catch {
     /* 재생 실패는 조용히 무시 */
@@ -188,16 +120,15 @@ export const sfx = {
 };
 
 // ---- 배경음악 (BGM) --------------------------------------------------------
-// 파일(bgm/BGM.mp3)이 로드되면 그걸 루프 재생하고, 아직/실패면 절차 생성 폴백.
-const SCALE = [261.63, 329.63, 392.0, 440.0, 523.25, 440.0, 392.0, 329.63]; // C-E-G-A-C-A-G-E
-const NOTE_DUR = 0.9;
-const LOOP_DUR = SCALE.length * NOTE_DUR;
+// PixelLab 곡 "Cat Trio cafe theme (loop)" 의 루프 구간(53.847~117.110s)만 모노로 잘라 둔 파일.
+// 63초 모노 ≈ 디코드 후 12MB. 파일 앞뒤 0.5초는 MP3 여백 대비 패딩 — 루프 지점은 그 안쪽.
+// 합성음 폴백은 없다.
+const BGM_FILE = 'bgm/cafe_loop_v2.mp3';
+const BGM_LOOP = { start: 0.5, end: 0.5 + (117.11 - 53.847) };
 
 let bgmGain: GainNode | null = null;
 let bgmPlaying = false;
 let bgmSource: AudioBufferSourceNode | null = null; // 파일 루프 모드
-let bgmTimer = 0; // 절차 생성(폴백) 모드 스케줄러
-let bgmLoadFailed = false; // 파일 로드 실패 시에만 합성음 폴백 사용
 
 function ensureBgmGain(c: AudioContext): GainNode {
   if (!bgmGain) {
@@ -215,35 +146,10 @@ function startBgmFile(c: AudioContext) {
   bgmSource = c.createBufferSource();
   bgmSource.buffer = bgmBuffer;
   bgmSource.loop = true;
+  bgmSource.loopStart = BGM_LOOP.start;
+  bgmSource.loopEnd = Math.min(BGM_LOOP.end, bgmBuffer.duration);
   bgmSource.connect(g);
   bgmSource.start();
-}
-
-// 절차 생성 폴백 — 잔잔한 아르페지오 루프
-function scheduleBgmIteration() {
-  const c = getCtx();
-  if (!c || !bgmGain) return;
-  const t0 = c.currentTime + 0.05;
-  SCALE.forEach((freq, i) => {
-    const start = t0 + i * NOTE_DUR;
-    const osc = c.createOscillator();
-    const filter = c.createBiquadFilter();
-    const gain = c.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    filter.type = 'lowpass';
-    filter.frequency.value = 1400;
-    gain.gain.setValueAtTime(0, start);
-    gain.gain.linearRampToValueAtTime(0.055, start + 0.18);
-    gain.gain.linearRampToValueAtTime(0.03, start + NOTE_DUR * 0.6);
-    gain.gain.linearRampToValueAtTime(0, start + NOTE_DUR);
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(bgmGain!);
-    osc.start(start);
-    osc.stop(start + NOTE_DUR + 0.05);
-  });
-  bgmTimer = window.setTimeout(scheduleBgmIteration, LOOP_DUR * 1000);
 }
 
 export const bgm = {
@@ -257,8 +163,7 @@ export const bgm = {
     g.gain.cancelScheduledValues(c.currentTime);
     g.gain.setValueAtTime(g.gain.value, c.currentTime);
     g.gain.linearRampToValueAtTime(store.settings.bgmVol, c.currentTime + 1.2); // 설정 볼륨으로 페이드인
-    if (bgmBuffer) startBgmFile(c);
-    else if (bgmLoadFailed) scheduleBgmIteration(); // 파일 로드 실패 확정 시에만 폴백
+    if (bgmBuffer) startBgmFile(c); // 로딩 중이면 로드 콜백이 시작한다
     // 아직 로딩 중이면 여기선 아무것도 안 함 — 로드 콜백이 파일/폴백을 시작한다.
   },
   /** 설정 슬라이더용 — 재생 중이면 즉시 볼륨 반영, 0 이면 정지 / 0→양수면 시작. */
@@ -280,7 +185,6 @@ export const bgm = {
   },
   stop() {
     bgmPlaying = false;
-    clearTimeout(bgmTimer);
     if (bgmSource) {
       try {
         bgmSource.stop();

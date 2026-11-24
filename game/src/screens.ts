@@ -6,13 +6,36 @@ import { t, tf, applyDocumentLang, nextLang, LANG_CODE, LANG_NAME } from './i18n
 import { connectGameServer } from './server';
 import { VXShop, type VXShopItem } from '@verse8/platform/vanilla';
 import {
-  catSprite,
-  costumeSprite,
+  lookLayers,
   costumeCategory,
   CostumeCategory,
   CAT_SPRITE_COUNT,
   COSTUME_COUNT,
 } from './assets';
+
+/** 스테이지 선택 화면 아래 — 고양이 다섯 마리가 (입힌 코스튬 그대로) 방석에 앉아 있다. */
+const FAMILY = [2, 7, 4, 3, 9];
+function familyHtml(): string {
+  return FAMILY.map((type, i) => {
+    const layers = lookLayers(type, store.equippedClothes[type], store.equippedHats[type])
+      .map((u) => `<i class="cat-layer" style="background-image:url(${u});animation-delay:${-i * 1.7}s"></i>`)
+      .join('');
+    return `<span class="family-cat" style="--i:${i}"><i class="family-cushion"></i><span class="family-sprite">${layers}</span></span>`;
+  }).join('');
+}
+
+/** 결과 화면의 고양이: 클리어 = 셋이 활짝 웃음, 실패 = 한 마리가 눈 감고 시무룩. */
+function resultCatHtml(win: boolean): string {
+  const types = win ? [7, 4, 2] : [3];
+  return types
+    .map((type, i) => {
+      const layers = lookLayers(type, store.equippedClothes[type], store.equippedHats[type])
+        .map((u) => `<i class="cat-layer" style="background-image:url(${u});background-position:${win ? '100%' : '50%'} 0"></i>`)
+        .join('');
+      return `<span class="result-cat" style="--i:${i}">${layers}</span>`;
+    })
+    .join('');
+}
 
 const SHOP_PRICE = 1000; // 코스튬 1개당 가격 (전부 동일)
 
@@ -188,17 +211,16 @@ export function showStageSelect(
     : store.highStage;
   const maxTile = effectiveHigh + LOOKAHEAD;
   const clampStage = (n: number) => Math.max(1, Math.min(maxTile, n));
-  let cur = clampStage(store.currentStage || 1);
+  // 기본 카드는 다음에 깰 스테이지
+  let cur = clampStage(Math.max(store.currentStage || 1, store.highStage));
 
   // 아이콘 SVG 에셋 경로 (iframe 서브패스 임베드에서도 절대 URL 로 해결)
-  const iconUrl = (n: string) => new URL(`icons/${n}.svg`, window.location.href).href;
+  const iconUrl = (n: string) => new URL(`ui/ic-${n}.png`, window.location.href).href;
 
   screen.innerHTML = `
-    <header class="select-top" style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 12px; width: 100%;">
-      <h1 style="margin: 0; font-size: 32px; font-weight: 900; text-align: center; letter-spacing: -0.02em; display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <img class="title-paw" src="${iconUrl('paw')}" alt="" /><span class="title-name">${t('gameTitle')}</span>
-      </h1>
-      <div class="select-info" style="display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%;">
+    <header class="select-top">
+      <h1 class="title-h1"><img class="title-logo" src="${new URL('ui/logo.png', window.location.href).href}" alt="Cat Trio" /><span class="title-name sr-only">${t('gameTitle')}</span></h1>
+      <div class="select-info">
         <span class="coin"><i class="coin-ic"></i> ${store.coins}</span>
         <button class="lang-toggle-btn" aria-label="Language"></button>
         <button class="icon-btn vx-shop-btn" aria-label="${t('vxShopAria')}"><img class="nav-ic" src="${iconUrl('gem')}" alt="" /></button>
@@ -215,6 +237,7 @@ export function showStageSelect(
       </div>
       <button class="pager-arrow pager-next" aria-label="${t('nextStageAria')}">›</button>
     </div>
+    <div class="cat-family">${familyHtml()}</div>
   `;
 
   const titleEl = screen.querySelector<HTMLHeadingElement>('.select-top h1')!;
@@ -231,7 +254,7 @@ export function showStageSelect(
     const stars = store.bestStars[id] ?? 0;
     if (locked) {
       return `
-        <span class="stage-card-lock">🔒</span>
+        <img class="stage-card-lock" src="${iconUrl('lock')}" alt="" />
         <span class="stage-card-no locked">${id}</span>
         <span class="stage-card-sub">${t('lockedLabel')}</span>
         <button class="stage-play-btn" disabled>${t('playBtn')}</button>`;
@@ -239,7 +262,7 @@ export function showStageSelect(
     return `
       <span class="stage-card-no">${id}</span>
       <span class="stage-card-stars">${starRow(stars)}</span>
-      <button class="stage-play-btn primary" data-stage="${id}">${t('playBtn')}</button>`;
+      <button class="stage-play-btn primary" data-stage="${id}"><img class="play-ic" src="${iconUrl('play')}" alt="" />${t('playBtn')}</button>`;
   }
 
   function render(dir: 0 | 1 | -1) {
@@ -381,10 +404,12 @@ export function showResult(
 
   overlay.innerHTML = `
     <div class="panel result-panel ${result.win ? 'result-win' : ''}">
-      <h2>${result.win ? t('clearTitle') : t('gameOverTitle')}</h2>
+      <h2 class="${result.win ? 'ribbon-title' : ''}">${result.win ? t('clearTitle') : t('gameOverTitle')}</h2>
+      ${result.win ? '' : `<div class="result-sad">${resultCatHtml(false)}</div>`}
       ${
         result.win
           ? `<div class="earned-stars">${earnedStars}</div>
+             <div class="result-cats">${resultCatHtml(true)}</div>
              ${isNewBest ? `<div class="new-best">${t('newBest')}</div>` : ''}
              <div class="result-rows">
                <div><span>${t('timeLabel')}</span><b>${sec}s</b></div>
@@ -393,7 +418,7 @@ export function showResult(
              ${
                result.coins > 0
                  ? `<button class="ad-double-btn">
-                      <span class="ad-free-ic">🎬</span> ${t('adDoubleBtn')}
+                      <img class="ad-free-ic" src="${new URL('ui/ic-film.png', window.location.href).href}" alt="" /> ${t('adDoubleBtn')}
                     </button>`
                  : ''
              }`
@@ -732,12 +757,7 @@ export function showShop(root: HTMLElement, onClose: () => void): void {
 
   // 타입이 현재 장착 중인 모습 (고양이 → 의상 → 모자 순으로 겹침)
   function equippedLayers(type: number): string {
-    const urls = [catSprite(type)];
-    const clothes = store.equippedClothes[type];
-    const hat = store.equippedHats[type];
-    if (clothes !== undefined) urls.push(costumeSprite(clothes));
-    if (hat !== undefined) urls.push(costumeSprite(hat));
-    return spriteLayers(urls);
+    return spriteLayers(lookLayers(type, store.equippedClothes[type], store.equippedHats[type]));
   }
 
   function renderTypes() {
@@ -770,7 +790,7 @@ export function showShop(root: HTMLElement, onClose: () => void): void {
 
       const noneTile = `
         <button class="shop-costume-tile ${equippedIdx === undefined ? 'equipped' : ''}" data-action="default" data-cat="${category}">
-          <i class="shop-sprite">${spriteLayers([catSprite(type)])}</i>
+          <i class="shop-sprite">${spriteLayers(lookLayers(type, undefined, undefined))}</i>
           ${equippedIdx === undefined ? `<span class="shop-badge shop-badge-on">${t('shopEquippedLabel')}</span>` : ''}
         </button>`;
 
@@ -785,8 +805,8 @@ export function showShop(root: HTMLElement, onClose: () => void): void {
               : '';
           return `
             <button class="shop-costume-tile ${isEquippedHere ? 'equipped' : ''} ${!owned ? 'locked' : ''}" data-action="costume" data-idx="${idx}">
-              <i class="shop-sprite">${spriteLayers([catSprite(type), costumeSprite(idx)])}</i>
-              ${!owned ? '<span class="shop-lock">🔒</span>' : ''}
+              <i class="shop-sprite">${spriteLayers(costumeCategory(idx) === 'clothes' ? lookLayers(type, idx, undefined) : lookLayers(type, undefined, idx))}</i>
+              ${!owned ? `<img class="shop-lock" src="${new URL('ui/ic-lock.png', window.location.href).href}" alt="" />` : ''}
               ${badge}
             </button>`;
         })

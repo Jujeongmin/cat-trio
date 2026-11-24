@@ -1,0 +1,737 @@
+/* =====================================================================
+   비주얼 개편 (CrazyGames 판, 2026-11-24)
+   고양이 카페 픽셀아트 톤: 그림 에셋(public/ui)으로 패널·버튼·칸·슬롯·아이콘을 그린다.
+   style.css 의 옛 규칙을 같은 선택자로 덮어쓴다 (main.ts 에서 style.css 뒤에 import).
+   CSS 안 public 그림은 /ui/... 로 쓴다 (Vite 가 빌드 때 상대경로로 바꾼다).
+   ===================================================================== */
+:root {
+  --ink: #5a3820;
+  --marker: #4a2c14;
+  --title-stroke: 0 2px 0 #7a4a1e, 2px 0 0 #7a4a1e, -2px 0 0 #7a4a1e, 0 -2px 0 #7a4a1e,
+    0 4px 0 rgba(60, 30, 10, 0.35);
+}
+html,
+body {
+  background: #e9c48e url("/ui/bg-portrait.webp") center / cover no-repeat;
+  image-rendering: pixelated;
+}
+html.land,
+html.land body {
+  background-image: url("/ui/bg-landscape.webp");
+}
+#app {
+  width: var(--stage-w, 480px);
+  height: var(--stage-h, 1000px);
+  background: transparent;
+  image-rendering: auto;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* ---- 공용: 패널·버튼 그림 (9-slice) ---- */
+.panel {
+  background: none;
+  border: 14px solid transparent;
+  border-image: url("/ui/panel-v2.png") 14 fill / 14px stretch;
+  border-radius: 0;
+  box-shadow: none;
+  filter: drop-shadow(0 8px 14px rgba(60, 30, 10, 0.35));
+  padding: 18px 22px;
+  color: var(--ink);
+  image-rendering: pixelated;
+}
+.panel h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: #fff;
+  text-shadow: var(--title-stroke);
+  font-size: 30px;
+}
+.panel button,
+.stage-play-btn,
+.ad-free-btn,
+.ad-double-btn,
+.tut-skip {
+  border: 14px solid transparent;
+  border-image: url("/ui/btn-cream.png") 22 26 26 26 fill / 16px 19px 19px 19px stretch;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0 6px;
+  min-height: 46px;
+  font: 800 17px/1.1 var(--font-display);
+  color: var(--marker);
+  cursor: pointer;
+  image-rendering: pixelated;
+  transition: transform 0.08s ease, filter 0.08s ease;
+}
+.panel button.primary,
+.stage-play-btn.primary {
+  border-image-source: url("/ui/btn-orange.png");
+  color: #fff;
+  text-shadow: 0 2px 0 #9a4a14, 1px 0 0 #9a4a14, -1px 0 0 #9a4a14;
+}
+.ad-free-btn,
+.ad-double-btn {
+  border-image-source: url("/ui/btn-blue.png");
+  color: #fff;
+  text-shadow: 0 2px 0 #23527a, 1px 0 0 #23527a, -1px 0 0 #23527a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.panel button:active:not(:disabled),
+.stage-play-btn:active:not(:disabled),
+.ad-free-btn:active,
+.ad-double-btn:active {
+  transform: translateY(2px) scale(0.98);
+  filter: brightness(0.95);
+}
+.panel .btns button:not(.primary) {
+  background: none;
+  color: var(--marker);
+}
+.ad-free-ic {
+  width: 26px;
+  height: 26px;
+  font-size: 0;
+}
+
+/* 코인 아이콘 (그림) */
+.coin-ic {
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  vertical-align: -0.2em;
+  background: url("/ui/ic-coin.png") center / contain no-repeat;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* 별 = 그림 (글자 ★ 는 숨긴다) */
+.mini-star,
+.big-star,
+.bar-star {
+  color: transparent !important;
+  text-shadow: none !important;
+  background: url("/ui/ic-star.png") center / contain no-repeat;
+  image-rendering: pixelated;
+}
+.mini-star {
+  display: inline-block;
+  width: 26px;
+  height: 26px;
+}
+.mini-star.off,
+.big-star.off,
+.bar-star.lost {
+  filter: grayscale(1) brightness(1.15) opacity(0.55);
+}
+.big-star {
+  display: inline-block;
+  width: 64px;
+  height: 64px;
+}
+.bar-star {
+  width: 30px;
+  height: 30px;
+}
+
+/* ---- 스테이지 선택 ---- */
+.screen.select {
+  align-items: center;
+  padding: 14px 16px 18px;
+}
+.select-top {
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+  width: 100%;
+}
+.title-h1 {
+  margin: 0;
+  line-height: 0;
+  text-align: center;
+}
+.title-logo {
+  width: min(86%, 380px);
+  filter: drop-shadow(0 4px 0 rgba(90, 50, 20, 0.35));
+  animation: logo-bob 3.2s ease-in-out infinite;
+}
+@keyframes logo-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(1deg);
+  }
+}
+.select-info {
+  justify-content: center;
+  gap: 8px;
+}
+.coin {
+  border: 12px solid transparent;
+  border-image: url("/ui/btn-cream.png") 22 26 26 26 fill / 14px 16px 17px 16px stretch;
+  background: none;
+  border-radius: 0;
+  padding: 0 4px;
+  font-size: 20px;
+  line-height: 32px;
+  color: var(--marker);
+  image-rendering: pixelated;
+}
+.icon-btn,
+.lang-toggle-btn {
+  border: 12px solid transparent;
+  border-image: url("/ui/btn-cream.png") 22 26 26 26 fill / 14px 16px 17px 16px stretch;
+  background: none;
+  border-radius: 0;
+  width: auto;
+  min-width: 56px;
+  height: 56px;
+  padding: 0 2px;
+  image-rendering: pixelated;
+}
+.nav-ic {
+  width: 30px;
+  height: 30px;
+}
+.ad-free-btn {
+  width: min(92%, 380px);
+  align-self: center;
+  margin: 2px auto 0;
+  font-size: 17px;
+}
+.pager-arrow {
+  width: 52px;
+  height: 52px;
+  border-radius: 0;
+  font-size: 0;
+  background: url("/ui/ic-back.png") center / 80% no-repeat;
+  image-rendering: pixelated;
+}
+.pager-next {
+  transform: scaleX(-1);
+}
+.pager-viewport {
+  width: 230px;
+  height: 250px;
+}
+.stage-card {
+  background: none;
+  border: 14px solid transparent;
+  border-image: url("/ui/panel-v2.png") 14 fill / 14px stretch;
+  border-radius: 0;
+  box-shadow: none;
+  filter: drop-shadow(0 6px 10px rgba(60, 30, 10, 0.3));
+  overflow: visible;
+  padding: 4px;
+  gap: 8px;
+  image-rendering: pixelated;
+}
+.stage-card::before,
+.stage-card::after {
+  display: none;
+}
+.stage-card-no {
+  font: 800 72px/1 var(--font-display);
+  color: #fff;
+  text-shadow: var(--title-stroke);
+}
+.stage-card-no.locked {
+  color: #e8d9bd;
+}
+.stage-card-lock {
+  width: 44px;
+  height: 44px;
+  font-size: 0;
+}
+.stage-play-btn {
+  width: 160px;
+  min-height: 54px;
+  font-size: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.play-ic {
+  width: 26px;
+  height: 26px;
+}
+
+/* 고양이 가족 — 방석에 앉은 다섯 마리 (입힌 코스튬 그대로) */
+.cat-family {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 2px;
+  height: 120px;
+  margin-top: auto;
+  width: 100%;
+}
+.family-cat {
+  position: relative;
+  width: 76px;
+  height: 100px;
+  animation: family-hop 2.6s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.5s);
+}
+.family-cushion {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: 0;
+  height: 40px;
+  background: url("/ui/cushion.png") center bottom / contain no-repeat;
+}
+.family-sprite {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 14px;
+  aspect-ratio: 1;
+}
+.family-sprite .cat-layer {
+  animation: blink 5s steps(1, end) infinite;
+}
+@keyframes family-hop {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  88% {
+    transform: translateY(-8px);
+  }
+}
+
+/* ---- 게임 판 ---- */
+.hud::before {
+  display: none;
+}
+.hud-item {
+  border: 12px solid transparent;
+  border-image: url("/ui/btn-cream.png") 22 26 26 26 fill / 14px 16px 17px 16px stretch;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0 4px;
+  min-height: 46px;
+  image-rendering: pixelated;
+}
+.hud-stage::before {
+  display: none;
+}
+.hud-stage-label,
+.hud-stage-num,
+.hud-coin b {
+  color: var(--marker);
+}
+.back-btn,
+.hud-settings-btn {
+  background: none;
+  border: 12px solid transparent;
+  border-image: url("/ui/btn-cream.png") 22 26 26 26 fill / 14px 16px 17px 16px stretch;
+  border-radius: 0;
+  box-shadow: none;
+  width: 58px;
+  height: 52px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0;
+  image-rendering: pixelated;
+}
+.back-btn::after {
+  display: none;
+}
+.back-btn img,
+.hud-settings-btn img {
+  width: 28px;
+  height: 28px;
+}
+.timebar {
+  height: 18px;
+  border: 3px solid #6b3f1a;
+  background: #f3dfb6;
+  border-radius: 10px;
+}
+
+/* 미로판: 골판지 상자 칸 + 테이프 봉인 상자(벽) */
+.maze-fill {
+  background: #c99c62;
+  box-shadow: none;
+}
+.maze-border {
+  background: #7a4a22;
+  background-image: none;
+  border-radius: 3px;
+  box-shadow: 0 2px 0 rgba(60, 30, 10, 0.4);
+}
+.cell {
+  border-radius: 6px;
+  background: url("/ui/tile-cell.png") center / 100% 100% no-repeat;
+  box-shadow: none;
+}
+.wall {
+  border-radius: 6px;
+  background: url("/ui/tile-wall.png") center / 100% 100% no-repeat;
+  box-shadow: 0 3px 0 rgba(60, 30, 10, 0.35);
+}
+.exit-arrow {
+  background: #ff9a52;
+  border: 3px solid #6b3f1a;
+}
+
+/* 슬롯 = 고양이 방석 */
+.slot {
+  border: 0;
+  border-radius: 0;
+  background: url("/ui/cushion.png") center 70% / 100% auto no-repeat;
+}
+
+/* 아이템 덱 = 나무 패널 + 크림 버튼 + 그림 아이콘 */
+.itembar {
+  background: none;
+  border: 14px solid transparent;
+  border-image: url("/ui/panel-v2.png") 14 fill / 14px stretch;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0 4px;
+  left: 6px;
+  right: 6px;
+  bottom: 8px;
+  image-rendering: pixelated;
+}
+.item-btn {
+  border: 14px solid transparent;
+  border-image: url("/ui/btn-cream.png") 22 26 26 26 fill / 16px 19px 19px 19px stretch;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  gap: 2px;
+  image-rendering: pixelated;
+}
+.item-btn:active:not(:disabled) {
+  box-shadow: none;
+}
+.item-ic {
+  width: 46px;
+  height: 46px;
+  image-rendering: auto;
+}
+.item-label {
+  font: 800 15px/1 var(--font-display);
+  color: var(--marker);
+}
+
+/* 튜토리얼 손짓 = 발바닥 그림 */
+.tut-hand {
+  font-size: 0;
+}
+.tut-hand img {
+  width: 44px;
+  height: 44px;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.3));
+}
+.tut-msg {
+  background: none;
+  border: 14px solid transparent;
+  border-image: url("/ui/panel-v2.png") 14 fill / 14px stretch;
+  border-radius: 0;
+  box-shadow: none;
+  image-rendering: pixelated;
+}
+
+/* ---- 결과 ---- */
+.result-panel {
+  border-radius: 0;
+  overflow: visible;
+}
+.result-panel::before,
+.result-panel::after {
+  display: none;
+}
+.ribbon-title {
+  margin: -52px -40px 4px !important;
+  padding: 26px 0 30px;
+  background: url("/ui/ribbon.png") center / 100% 100% no-repeat;
+  image-rendering: pixelated;
+  font-size: 32px !important;
+}
+.result-cats,
+.result-sad {
+  display: flex;
+  justify-content: center;
+  height: 84px;
+  margin: -4px 0 2px;
+}
+.result-cat {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  margin-top: 14px;
+  animation: result-cheer 0.9s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.12s);
+}
+.result-sad .result-cat {
+  animation: none;
+  filter: saturate(0.7);
+}
+@keyframes result-cheer {
+  0%,
+  100% {
+    transform: translateY(0) scale(1.04, 0.96);
+  }
+  45% {
+    transform: translateY(-14px) scale(0.97, 1.04);
+  }
+}
+.daily-promise {
+  border: 12px solid transparent;
+  border-image: url("/ui/btn-cream.png") 22 26 26 26 fill / 14px 16px 17px 16px stretch;
+  background: none;
+  border-radius: 0;
+  padding: 0 4px;
+  image-rendering: pixelated;
+}
+
+/* ---- 출석판 칸 = 버튼 그림 ---- */
+.att-cell {
+  border: 12px solid transparent;
+  border-image: url("/ui/btn-cream.png") 22 26 26 26 fill / 14px 16px 17px 16px stretch;
+  background: none;
+  border-radius: 0;
+  padding: 0;
+  image-rendering: pixelated;
+}
+.att-cell.big {
+  border-image-source: url("/ui/btn-orange.png");
+  background: none;
+}
+.att-cell.big .att-day,
+.att-cell.big .att-reward {
+  color: #fff;
+  text-shadow: 0 2px 0 #9a4a14;
+}
+.att-cell.today {
+  border-image-source: url("/ui/btn-green.png");
+  box-shadow: none;
+  filter: drop-shadow(0 0 8px rgba(255, 220, 90, 0.95));
+}
+.att-cell.tomorrow {
+  border-style: solid;
+  border-image-source: url("/ui/btn-blue.png");
+}
+
+/* ---- 상점 ---- */
+.shop-lock {
+  width: 22px;
+  height: 22px;
+  font-size: 0;
+}
+
+/* =====================================================================
+   가로 2단 (가상 캔버스 1000×620, layout.ts landscape)
+   왼쪽 0~520 미로판 · 오른쪽 520~1000 HUD/시간바/방석/아이템
+   ===================================================================== */
+.wrap.land .hud {
+  left: 520px;
+  width: 480px;
+  top: 14px;
+}
+.wrap.land .timebar {
+  left: 560px;
+  width: 400px;
+  top: 112px;
+}
+.wrap.land .itembar {
+  top: 390px;
+  left: 540px;
+  right: 14px;
+  bottom: 30px;
+}
+.wrap.land .tut-msg {
+  left: 540px !important;
+  right: 14px !important;
+  width: auto !important;
+  top: 160px !important;
+  bottom: auto !important;
+  transform: none !important;
+}
+/* 스테이지 선택 — 가로에서는 로고·가족 왼쪽, 카드 오른쪽 */
+html.land .screen.select {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto 1fr;
+  column-gap: 24px;
+  padding: 18px 28px;
+}
+html.land .select-top {
+  grid-column: 1;
+  grid-row: 1;
+}
+html.land .ad-free-btn {
+  grid-column: 1;
+  grid-row: 2;
+}
+html.land .cat-family {
+  grid-column: 1;
+  grid-row: 3;
+  align-self: end;
+}
+html.land .stage-pager {
+  grid-column: 2;
+  grid-row: 1 / 4;
+}
+
+/* 잠긴 고양이 = 상자 그늘 속 (반투명 유령 대신), 누를 수 있는 고양이 = 따뜻한 빛 */
+.cat.locked {
+  opacity: 1;
+  filter: brightness(0.8) saturate(0.6) drop-shadow(0 2px 1px rgba(0, 0, 0, 0.2));
+}
+.cat.free {
+  filter: drop-shadow(0 0 5px rgba(255, 236, 150, 0.95)) drop-shadow(0 3px 2px rgba(0, 0, 0, 0.2));
+}
+.cat.inslot,
+.cat.walk {
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.22));
+}
+.family-cat {
+  width: 90px;
+  height: 118px;
+}
+.cat-family {
+  height: 136px;
+}
+
+/* 3매치 반짝 터짐 (Game.burstAt) */
+.burst {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  z-index: 1300;
+  pointer-events: none;
+  image-rendering: pixelated;
+  animation: burst 0.75s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+@keyframes burst {
+  0% {
+    transform: translate(0, 0) scale(0.3) rotate(0);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(1.1) rotate(var(--rot));
+    opacity: 0;
+  }
+}
+
+/* 9-slice 는 그림 정중앙 1px 에서 자른다 — 가운데가 단색으로만 늘어나 그림 속 하이라이트가
+   줄처럼 번지지 않게 (사용자 지적: "UI 안에 이상한 선"). 버튼 102×60, 패널 98×98 기준. */
+.timebar i,
+.timebar.low i {
+  background-image: linear-gradient(#8fe08f, #4dbf5e);
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35);
+}
+.timebar.low i {
+  background-image: linear-gradient(#ff9a7a, #e9573f);
+}
+.hud-item,
+.coin,
+.daily-promise {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 그림(border-image)을 쓰는 요소는 옛 CSS 의 배경색·그림자·둥근 모서리·외곽선을 전부 끈다.
+   (.primary 같은 더 구체적인 옛 규칙이 그림 뒤에 테두리 여백을 남기던 문제) */
+.panel,
+.panel button,
+.panel button.primary,
+.stage-play-btn,
+.stage-play-btn.primary,
+.ad-free-btn,
+.ad-double-btn,
+.ad-double-btn.claimed,
+.tut-skip,
+.coin,
+.icon-btn,
+.lang-toggle-btn,
+.stage-card,
+.hud-item,
+.back-btn,
+.hud-settings-btn,
+.itembar,
+.item-btn,
+.tut-msg,
+.daily-promise,
+.att-cell,
+.att-cell.big,
+.att-cell.today,
+.att-cell.tomorrow {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  outline: none;
+}
+.item-btn:disabled {
+  opacity: 0.5;
+  filter: grayscale(0.6);
+}
+
+/* 부팅 화면 — 카페 배경 위 로고 + 막대 */
+.boot-screen {
+  background: transparent !important;
+}
+.boot-logo {
+  width: min(80%, 380px);
+  animation: logo-bob 2.4s ease-in-out infinite;
+}
+.boot-bar {
+  background: rgba(90, 50, 20, 0.25) !important;
+  border: 3px solid #6b3f1a;
+  border-radius: 10px;
+}
+
+/* 상점 칸 = 방석 위 고양이 (버튼 틀 대신, 고양이를 크게) */
+.panel button.shop-type-tile,
+.panel button.shop-costume-tile {
+  border: 0 !important;
+  border-image: none !important;
+  background: url("/ui/cushion.png") center 92% / 92% auto no-repeat !important;
+  min-height: 0;
+  overflow: visible;
+  aspect-ratio: 1;
+  padding: 0;
+}
+.shop-sprite {
+  left: 14%;
+  right: 14%;
+  top: 22%;
+  bottom: 14%;
+}
+.shop-costume-tile.equipped {
+  filter: drop-shadow(0 0 6px rgba(120, 220, 110, 1));
+}
+.shop-grid {
+  gap: 10px 6px;
+}

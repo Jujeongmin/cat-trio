@@ -1,4 +1,6 @@
 import './style.css';
+import './reskin.css';
+import { pickLayout } from './layout';
 import { Game } from './Game';
 import { makeStage } from './stages';
 import { store, persist, resetSave, recordClear } from './storage';
@@ -10,6 +12,27 @@ import { getGameServer, connectGameServer } from './server';
 import { VXShop } from '@verse8/platform/vanilla';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
+
+// ---- 판 배율 ----------------------------------------------------------------
+// 판은 고정 디자인 상자(세로 480×1000, 창이 5:4 보다 넓으면 가로 1000×620 2단)이고
+// 배율 하나로만 화면에 맞춘다 (style.css #app, layout.ts).
+function fitStage() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const land = pickLayout(vw, vh) === 'landscape';
+  const W = land ? 1000 : 480;
+  const H = land ? 620 : 1000;
+  const scale = Math.min(vw / W, vh / H, 2);
+  const root = document.documentElement;
+  root.style.setProperty('--stage-w', `${W}px`);
+  root.style.setProperty('--stage-h', `${H}px`);
+  root.style.setProperty('--stage-scale', String(scale));
+  root.classList.toggle('land', land);
+}
+new ResizeObserver(fitStage).observe(document.documentElement);
+window.addEventListener('resize', fitStage);
+window.visualViewport?.addEventListener('resize', fitStage);
+fitStage();
 
 // VX 상점 초기화 (계정/verse 는 임베드 URL 파라미터에서 자동 인식). 한 번만.
 try {
